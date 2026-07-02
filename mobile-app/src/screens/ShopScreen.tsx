@@ -1,0 +1,64 @@
+import React, { useEffect, useState } from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { theme } from '../theme/theme';
+import { Card } from '../components/Card';
+import { EmptyState } from '../components/EmptyState';
+import * as catalogApi from '../api/catalog';
+
+export function ShopScreen() {
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
+  const { shopId } = route.params;
+  const [shop, setShop] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    catalogApi.fetchShop(shopId).then(setShop);
+    catalogApi.fetchShopProducts(shopId).then(setProducts);
+  }, [shopId]);
+
+  if (!shop) return <EmptyState message="Chargement..." />;
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.name}>{shop.name}</Text>
+        {shop.address ? <Text style={styles.address}>{shop.address}</Text> : null}
+        {shop.description ? <Text style={styles.description}>{shop.description}</Text> : null}
+      </View>
+
+      <Text style={styles.sectionTitle}>Produits</Text>
+      {products.length === 0 ? (
+        <EmptyState message="Aucun produit disponible dans cette boutique." />
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={{ paddingHorizontal: 12 }}
+          renderItem={({ item }) => (
+            <View style={styles.gridItem}>
+              <Card
+                title={item.name}
+                subtitle={`${item.price} DJF`}
+                imageUrl={item.imageUrl}
+                onPress={() => navigation.navigate('ProductDetail', { productId: item.id, shopId })}
+              />
+            </View>
+          )}
+        />
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
+  header: { padding: 20, paddingTop: 60 },
+  name: { fontSize: 24, fontWeight: '800', color: theme.text },
+  address: { fontSize: 13, color: theme.muted, marginTop: 4 },
+  description: { fontSize: 14, color: theme.text, marginTop: 12 },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: theme.text, marginLeft: 20, marginBottom: 12 },
+  gridItem: { width: '50%', marginBottom: 12 },
+});

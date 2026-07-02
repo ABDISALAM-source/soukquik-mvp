@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: soukquik
+      POSTGRES_PASSWORD: soukquik
+      POSTGRES_DB: soukquik
+    ports:
+      - "5432:5432"
+    volumes:
+      - soukquik_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soukquik"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      DATABASE_URL: postgres://soukquik:soukquik@postgres:5432/soukquik
+      JWT_ACCESS_SECRET: change_this_access_secret
+      JWT_REFRESH_SECRET: change_this_refresh_secret
+      JWT_ACCESS_EXPIRES: 15m
+      JWT_REFRESH_EXPIRES: 7d
+      CORS_ORIGIN: "*"
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ---- Services optionnels V2 (désactivés par défaut) ----
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #
+  # meilisearch:
+  #   image: getmeili/meilisearch:v1.9
+  #   ports:
+  #     - "7700:7700"
+  #   environment:
+  #     MEILI_MASTER_KEY: change_this_key
+
+volumes:
+  soukquik_pg_data:

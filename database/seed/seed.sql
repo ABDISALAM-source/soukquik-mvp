@@ -1,0 +1,50 @@
+-- Données de démo SoukQuik
+-- Mot de passe pour tous les comptes de démo : "password123"
+-- Hash bcrypt correspondant (10 rounds) :
+-- $2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG
+
+INSERT INTO categories (id, name, type, icon) VALUES
+  (gen_random_uuid(), 'Électronique', 'product', 'zap'),
+  (gen_random_uuid(), 'Vêtements', 'product', 'shirt'),
+  (gen_random_uuid(), 'Quincaillerie', 'product', 'hammer'),
+  (gen_random_uuid(), 'Électricité', 'service', 'plug'),
+  (gen_random_uuid(), 'Plomberie', 'service', 'wrench'),
+  (gen_random_uuid(), 'Cours particuliers', 'service', 'book'),
+  (gen_random_uuid(), 'Mécanique auto', 'service', 'car'),
+  (gen_random_uuid(), 'Coiffure', 'both', 'scissors');
+
+-- Utilisateurs de démo
+INSERT INTO users (id, full_name, email, phone, password_hash, role) VALUES
+  ('11111111-1111-1111-1111-111111111111', 'Amina Client', 'amina@example.com', '+25377000001', '$2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG', 'client'),
+  ('22222222-2222-2222-2222-222222222222', 'Farah Vendeuse', 'farah@example.com', '+25377000002', '$2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG', 'vendor'),
+  ('33333333-3333-3333-3333-333333333333', 'Omar Électricien', 'omar@example.com', '+25377000003', '$2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG', 'provider'),
+  ('44444444-4444-4444-4444-444444444444', 'Admin SoukQuik', 'admin@soukquik.dj', '+25377000004', '$2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG', 'admin');
+
+-- Boutique de démo
+INSERT INTO shops (id, owner_id, name, description, category_id, latitude, longitude, address)
+SELECT '55555555-5555-5555-5555-555555555555', '22222222-2222-2222-2222-222222222222',
+  'Electro Farah', 'Vente de matériel électronique et accessoires', c.id, 11.5721, 43.1456, 'Djibouti Ville, quartier 1'
+FROM categories c WHERE c.name = 'Électronique' LIMIT 1;
+
+-- Produits de démo
+INSERT INTO products (shop_id, name, description, category_id, price, stock, image_url)
+SELECT '55555555-5555-5555-5555-555555555555', 'Chargeur USB-C rapide', 'Chargeur 20W compatible tous smartphones', c.id, 1500, 40, 'https://images.example.com/charger.jpg'
+FROM categories c WHERE c.name = 'Électronique' LIMIT 1;
+
+INSERT INTO products (shop_id, name, description, category_id, price, stock, image_url)
+SELECT '55555555-5555-5555-5555-555555555555', 'Écouteurs Bluetooth', 'Autonomie 8h, résistants à l''eau', c.id, 8500, 15, 'https://images.example.com/earbuds.jpg'
+FROM categories c WHERE c.name = 'Électronique' LIMIT 1;
+
+-- Service de démo
+INSERT INTO services (id, provider_id, title, description, category_id, price, price_unit, latitude, longitude, service_area_km)
+SELECT '66666666-6666-6666-6666-666666666666', '33333333-3333-3333-3333-333333333333',
+  'Électricien à domicile', 'Installation, dépannage et mise aux normes électriques', c.id, 3000, 'par intervention', 11.5850, 43.1480, 15
+FROM categories c WHERE c.name = 'Électricité' LIMIT 1;
+
+-- Commande de démo
+INSERT INTO orders (client_id, shop_id, status, total_amount, delivery_address)
+VALUES ('11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'pending', 1500, 'Quartier 4, Djibouti Ville');
+
+-- Réservation de démo
+INSERT INTO bookings (client_id, service_id, status, scheduled_at, notes)
+VALUES ('11111111-1111-1111-1111-111111111111', '66666666-6666-6666-6666-666666666666', 'pending', now() + interval '2 days', 'Panne de courant dans la cuisine');
