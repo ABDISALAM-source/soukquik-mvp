@@ -22,7 +22,8 @@ services:
 
   backend:
     build:
-      context: ../backend
+      context: ..
+      dockerfile: backend/Dockerfile
     container_name: soukquik_backend
     restart: unless-stopped
     environment:
