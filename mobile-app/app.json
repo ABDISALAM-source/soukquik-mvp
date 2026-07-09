@@ -22,7 +22,8 @@
     },
     "owner": "khayali",
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ]
   }
 }
