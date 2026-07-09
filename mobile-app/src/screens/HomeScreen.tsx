@@ -1,11 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { SearchBar } from '../components/SearchBar';
 import { Card } from '../components/Card';
+import { Carousel } from '../components/Carousel';
 import { EmptyState } from '../components/EmptyState';
-import { theme } from '../theme/theme';
+import { SkeletonCardRow } from '../components/Skeleton';
+import { theme, spacing, typography } from '../theme/theme';
 import * as catalogApi from '../api/catalog';
+
+function SectionTitle({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
+  return (
+    <View style={styles.sectionTitleRow}>
+      <View style={styles.sectionIconBadge}>
+        <Ionicons name={icon} size={15} color={theme.primary} />
+      </View>
+      <Text style={styles.sectionTitle}>{label}</Text>
+    </View>
+  );
+}
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
@@ -28,60 +42,90 @@ export function HomeScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.hello}>SoukQuik</Text>
         <SearchBar value={query} onChangeText={setQuery} onSubmit={goSearch} />
       </View>
 
-      <Text style={styles.sectionTitle}>Boutiques populaires</Text>
-      {shops.length === 0 && !loading ? (
-        <EmptyState message="Aucune boutique pour le moment." />
-      ) : (
-        <FlatList
-          horizontal
-          data={shops}
-          keyExtractor={(item) => item.id}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.row}
-          renderItem={({ item }) => (
-            <Card
-              title={item.name}
-              subtitle={item.address}
-              imageUrl={item.logoUrl}
-              onPress={() => navigation.navigate('Shop', { shopId: item.id })}
-            />
-          )}
-        />
-      )}
+      <View style={styles.section}>
+        <SectionTitle icon="storefront" label="Boutiques populaires" />
+        {loading ? (
+          <View style={styles.rowPadding}>
+            <SkeletonCardRow />
+          </View>
+        ) : shops.length === 0 ? (
+          <EmptyState message="Aucune boutique pour le moment." />
+        ) : (
+          <Carousel
+            data={shops}
+            keyExtractor={(item: any) => item.id}
+            renderItem={({ item, index }: { item: any; index: number }) => (
+              <Card
+                title={item.name}
+                subtitle={item.address}
+                imageUrl={item.logoUrl}
+                index={index}
+                onPress={() => navigation.navigate('Shop', { shopId: item.id })}
+              />
+            )}
+          />
+        )}
+      </View>
 
-      <Text style={styles.sectionTitle}>Services les plus demandés</Text>
-      {services.length === 0 && !loading ? (
-        <EmptyState message="Aucun service pour le moment." />
-      ) : (
-        <FlatList
-          horizontal
-          data={services}
-          keyExtractor={(item) => item.id}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.row}
-          renderItem={({ item }) => (
-            <Card
-              title={item.title}
-              subtitle={`${item.price} DJF`}
-              onPress={() => navigation.navigate('Service', { serviceId: item.id })}
-            />
-          )}
-        />
-      )}
+      <View style={[styles.section, styles.sectionAlt]}>
+        <SectionTitle icon="construct" label="Services les plus demandés" />
+        {loading ? (
+          <View style={styles.rowPadding}>
+            <SkeletonCardRow />
+          </View>
+        ) : services.length === 0 ? (
+          <EmptyState message="Aucun service pour le moment." />
+        ) : (
+          <Carousel
+            data={services}
+            keyExtractor={(item: any) => item.id}
+            renderItem={({ item, index }: { item: any; index: number }) => (
+              <Card
+                title={item.title}
+                subtitle={`${item.price} DJF`}
+                index={index}
+                onPress={() => navigation.navigate('Service', { serviceId: item.id })}
+              />
+            )}
+          />
+        )}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
-  header: { padding: 20, paddingTop: 60, gap: 16 },
-  hello: { fontSize: 26, fontWeight: '800', color: theme.text },
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: theme.text, marginLeft: 20, marginTop: 24, marginBottom: 12 },
-  row: { paddingHorizontal: 20 },
+  content: { paddingBottom: spacing.xxl },
+  header: { padding: spacing.lg - 4, paddingTop: 60, gap: spacing.md },
+  hello: { fontSize: typography.size.xl - 2, fontFamily: typography.fontFamily.headingBold, color: theme.text },
+  section: { paddingTop: spacing.lg },
+  sectionAlt: { backgroundColor: theme.surface, marginTop: spacing.sm },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginLeft: spacing.lg - 4,
+    marginBottom: spacing.sm + 4,
+  },
+  sectionIconBadge: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.primary + '18',
+  },
+  sectionTitle: {
+    fontSize: typography.size.md + 1,
+    fontFamily: typography.fontFamily.heading,
+    color: theme.text,
+  },
+  rowPadding: { paddingLeft: spacing.lg - 4 },
 });

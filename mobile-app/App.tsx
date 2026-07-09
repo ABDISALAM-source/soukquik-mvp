@@ -11,6 +11,11 @@ import Poppins_700Bold from '@expo-google-fonts/poppins/700Bold/Poppins_700Bold.
 import Inter_400Regular from '@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf';
 import Inter_500Medium from '@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf';
 import Inter_600SemiBold from '@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf';
+// Import direct du sous-module Ionicons (pas depuis l'index du package) :
+// l'index @expo/vector-icons réexporte les 15 familles d'icônes, ce qui
+// embarquerait ~3.5Mo de polices inutilisées (MaterialCommunityIcons seul
+// pèse 1.3Mo) alors qu'on n'utilise qu'Ionicons.
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
 SplashScreen.preventAutoHideAsync();
@@ -22,6 +27,10 @@ export default function App() {
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
+    // Précharge la police d'icônes explicitement (au lieu de compter sur le
+    // chargement lazy interne du composant Ionicons) pour éviter le flash de
+    // glyphe manquant ("rectangle vide") au premier rendu de la tab bar.
+    ...Ionicons.font,
   });
 
   useEffect(() => {

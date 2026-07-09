@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from '../components/Button';
-import { theme } from '../theme/theme';
+import { theme, typography, spacing, radius } from '../theme/theme';
 import { useSession } from '../store/session';
 import * as authApi from '../api/auth';
 
@@ -71,30 +71,39 @@ export function AuthScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   content: { padding: 24, paddingTop: 80 },
-  logo: { fontSize: 32, fontWeight: '800', color: theme.primary, textAlign: 'center' },
-  tagline: { fontSize: 14, color: theme.muted, textAlign: 'center', marginTop: 4, marginBottom: 32 },
+  logo: { fontSize: 32, fontFamily: typography.fontFamily.headingBold, color: theme.primary, textAlign: 'center' },
+  tagline: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.fontFamily.body,
+    color: theme.muted,
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 32,
+  },
   tabs: { flexDirection: 'row', marginBottom: 24, justifyContent: 'center', gap: 24 },
-  tab: { fontSize: 15, color: theme.muted, fontWeight: '600' },
+  tab: { fontSize: typography.size.md - 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.muted },
   tabActive: { color: theme.primary, textDecorationLine: 'underline' },
   input: {
     backgroundColor: theme.surface,
     borderWidth: 1,
     borderColor: theme.border,
-    borderRadius: 12,
+    borderRadius: radius.sm + 4,
     height: 48,
-    paddingHorizontal: 14,
-    marginBottom: 12,
+    paddingHorizontal: spacing.md - 2,
+    marginBottom: spacing.sm + 4,
+    fontFamily: typography.fontFamily.body,
     color: theme.text,
   },
-  roleRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  roleRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
   roleChip: {
     borderWidth: 1,
     borderColor: theme.border,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    fontSize: 13,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm + 4,
+    paddingVertical: spacing.xs + 2,
+    fontSize: typography.size.xs + 1,
+    fontFamily: typography.fontFamily.body,
     color: theme.muted,
   },
-  roleChipActive: { borderColor: theme.primary, color: theme.primary, fontWeight: '700' },
+  roleChipActive: { borderColor: theme.primary, color: theme.primary, fontFamily: typography.fontFamily.bodySemiBold },
 });

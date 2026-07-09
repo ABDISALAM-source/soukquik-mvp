@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { theme } from '../theme/theme';
+import { theme, typography } from '../theme/theme';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
 import * as catalogApi from '../api/catalog';
@@ -56,9 +56,15 @@ export function ShopScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   header: { padding: 20, paddingTop: 60 },
-  name: { fontSize: 24, fontWeight: '800', color: theme.text },
-  address: { fontSize: 13, color: theme.muted, marginTop: 4 },
-  description: { fontSize: 14, color: theme.text, marginTop: 12 },
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: theme.text, marginLeft: 20, marginBottom: 12 },
+  name: { fontSize: 24, fontFamily: typography.fontFamily.headingBold, color: theme.text },
+  address: { fontSize: typography.size.sm - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
+  description: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, marginTop: 12 },
+  sectionTitle: {
+    fontSize: typography.size.lg - 3,
+    fontFamily: typography.fontFamily.heading,
+    color: theme.text,
+    marginLeft: 20,
+    marginBottom: 12,
+  },
   gridItem: { width: '50%', marginBottom: 12 },
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { theme, spacing, typography } from '../theme/theme';
 
 type StarName = 'star' | 'star-half' | 'star-outline';

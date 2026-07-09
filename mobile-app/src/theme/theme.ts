@@ -58,9 +58,9 @@ function makeShadow(elevation: number, opacity: number, blur: number) {
 }
 
 export const shadow = {
-  sm: makeShadow(2, 0.06, 4),
-  md: makeShadow(4, 0.08, 8),
-  lg: makeShadow(8, 0.12, 16),
+  sm: makeShadow(3, 0.1, 6),
+  md: makeShadow(6, 0.14, 10),
+  lg: makeShadow(10, 0.18, 20),
 };
 
 export const typography = {

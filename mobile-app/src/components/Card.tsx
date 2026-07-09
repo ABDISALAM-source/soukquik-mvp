@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { theme, spacing, radius, shadow, typography } from '../theme/theme';
 
 interface CardProps {
@@ -13,9 +13,20 @@ interface CardProps {
 
 export function Card({ title, subtitle, imageUrl, onPress, index = 0 }: CardProps) {
   const scale = useSharedValue(1);
+  // Fondu/décalage manuel (opacity + translateY) au montage, plutôt que le
+  // prop `entering` de Reanimated : `entering` mesure/repositionne le layout
+  // pendant la transition, ce qui perturbe le calcul de largeur d'une
+  // FlatList horizontale et forçait les cartes à s'empiler verticalement.
+  // Une animation purement transform+opacity n'affecte jamais le layout.
+  const mountProgress = useSharedValue(0);
+
+  useEffect(() => {
+    mountProgress.value = withTiming(1, { duration: 350 });
+  }, [mountProgress]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{ scale: scale.value }, { translateY: (1 - mountProgress.value) * 16 }],
+    opacity: mountProgress.value,
   }));
 
   return (
@@ -28,10 +39,7 @@ export function Card({ title, subtitle, imageUrl, onPress, index = 0 }: CardProp
         scale.value = withTiming(1, { duration: 100 });
       }}
     >
-      <Animated.View
-        style={[styles.card, animatedStyle]}
-        entering={FadeInDown.duration(350).delay(Math.min(index, 6) * 50)}
-      >
+      <Animated.View style={[styles.card, animatedStyle]}>
         {imageUrl ? (
           <Image source={{ uri: imageUrl }} style={styles.image} />
         ) : (
@@ -50,13 +58,17 @@ const styles = StyleSheet.create({
   card: {
     width: 140,
     marginRight: spacing.md,
+    backgroundColor: theme.surface,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    paddingBottom: spacing.sm + 2,
+    ...shadow.md,
   },
   image: {
-    width: 140,
+    width: '100%',
     height: 100,
-    borderRadius: radius.md,
-    backgroundColor: theme.surface,
-    ...shadow.sm,
+    borderRadius: radius.sm,
+    backgroundColor: theme.background,
   },
   placeholder: {
     alignItems: 'center',
@@ -69,12 +81,13 @@ const styles = StyleSheet.create({
     color: theme.primary,
   },
   title: {
-    marginTop: spacing.xs + 2,
+    marginTop: spacing.xs + 4,
     fontSize: typography.size.sm,
     fontFamily: typography.fontFamily.bodySemiBold,
     color: theme.text,
   },
   subtitle: {
+    marginTop: 2,
     fontSize: typography.size.xs,
     fontFamily: typography.fontFamily.body,
     color: theme.muted,

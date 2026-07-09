@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { theme } from '../theme/theme';
+import { theme, typography, spacing, radius } from '../theme/theme';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
 import { useCart } from '../store/cart';
@@ -66,7 +66,7 @@ export function CartScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 60 },
-  title: { fontSize: 22, fontWeight: '800', color: theme.text, marginBottom: 16 },
+  title: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: 16 },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -75,18 +75,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.border,
   },
-  itemName: { fontSize: 14, color: theme.text, flex: 1 },
-  itemPrice: { fontSize: 14, fontWeight: '700', color: theme.text, marginRight: 12 },
-  remove: { color: theme.danger, fontSize: 12 },
-  total: { fontSize: 18, fontWeight: '800', color: theme.text, marginVertical: 16 },
+  itemName: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, flex: 1 },
+  itemPrice: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text, marginRight: 12 },
+  remove: { color: theme.danger, fontSize: typography.size.xs, fontFamily: typography.fontFamily.body },
+  total: { fontSize: typography.size.lg - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text, marginVertical: 16 },
   input: {
     backgroundColor: theme.surface,
     borderWidth: 1,
     borderColor: theme.border,
-    borderRadius: 12,
+    borderRadius: radius.sm + 4,
     height: 48,
-    paddingHorizontal: 14,
-    marginBottom: 16,
+    paddingHorizontal: spacing.md - 2,
+    marginBottom: spacing.md,
+    fontFamily: typography.fontFamily.body,
     color: theme.text,
   },
 });

@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SearchBar } from '../components/SearchBar';
 import { EmptyState } from '../components/EmptyState';
-import { theme } from '../theme/theme';
+import { theme, typography } from '../theme/theme';
 import * as catalogApi from '../api/catalog';
 
 export function SearchScreen() {
@@ -65,7 +65,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
   header: { padding: 20, paddingTop: 60 },
   result: {
-    fontSize: 15,
+    fontSize: typography.size.md - 1,
+    fontFamily: typography.fontFamily.body,
     color: theme.text,
     paddingVertical: 14,
     borderBottomWidth: 1,

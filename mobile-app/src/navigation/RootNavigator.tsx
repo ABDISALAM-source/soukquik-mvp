@@ -1,9 +1,18 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useSession } from '../store/session';
 import { theme } from '../theme/theme';
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+function tabIcon(activeName: IoniconName, inactiveName: IoniconName): BottomTabNavigationOptions['tabBarIcon'] {
+  return ({ focused, color, size }) => (
+    <Ionicons name={focused ? activeName : inactiveName} size={size} color={color} />
+  );
+}
 
 import { AuthScreen } from '../screens/AuthScreen';
 import { HomeScreen } from '../screens/HomeScreen';
@@ -23,10 +32,26 @@ const Tab = createBottomTabNavigator();
 function ClientTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: theme.primary }}>
-      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Accueil' }} />
-      <Tab.Screen name="Search" component={SearchScreen} options={{ title: 'Recherche' }} />
-      <Tab.Screen name="Cart" component={CartScreen} options={{ title: 'Panier' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: 'Accueil', tabBarIcon: tabIcon('home', 'home-outline') }}
+      />
+      <Tab.Screen
+        name="Search"
+        component={SearchScreen}
+        options={{ title: 'Recherche', tabBarIcon: tabIcon('search', 'search-outline') }}
+      />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{ title: 'Panier', tabBarIcon: tabIcon('cart', 'cart-outline') }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Profil', tabBarIcon: tabIcon('person', 'person-outline') }}
+      />
     </Tab.Navigator>
   );
 }
@@ -34,8 +59,16 @@ function ClientTabs() {
 function VendorTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: theme.primary }}>
-      <Tab.Screen name="VendorDashboard" component={VendorDashboardScreen} options={{ title: 'Dashboard' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
+      <Tab.Screen
+        name="VendorDashboard"
+        component={VendorDashboardScreen}
+        options={{ title: 'Dashboard', tabBarIcon: tabIcon('grid', 'grid-outline') }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Profil', tabBarIcon: tabIcon('person', 'person-outline') }}
+      />
     </Tab.Navigator>
   );
 }
@@ -43,8 +76,16 @@ function VendorTabs() {
 function ProviderTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: theme.primary }}>
-      <Tab.Screen name="ProviderDashboard" component={ProviderDashboardScreen} options={{ title: 'Dashboard' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profil' }} />
+      <Tab.Screen
+        name="ProviderDashboard"
+        component={ProviderDashboardScreen}
+        options={{ title: 'Dashboard', tabBarIcon: tabIcon('grid', 'grid-outline') }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Profil', tabBarIcon: tabIcon('person', 'person-outline') }}
+      />
     </Tab.Navigator>
   );
 }

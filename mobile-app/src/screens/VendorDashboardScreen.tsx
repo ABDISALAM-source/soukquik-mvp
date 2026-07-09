@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../theme/theme';
+import { theme, typography, radius } from '../theme/theme';
 import { StatusBadge } from '../components/StatusBadge';
 import { EmptyState } from '../components/EmptyState';
 import { api } from '../api/client';
@@ -87,12 +87,19 @@ function Stat({ label, value }: { label: string; value: any }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 60 },
-  title: { fontSize: 20, fontWeight: '800', color: theme.text, marginBottom: 16 },
+  title: { fontSize: 20, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: 16 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
-  stat: { flex: 1, backgroundColor: theme.surface, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: theme.border },
-  statValue: { fontSize: 18, fontWeight: '800', color: theme.primary },
-  statLabel: { fontSize: 11, color: theme.muted, marginTop: 4 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: theme.text, marginBottom: 12 },
+  stat: {
+    flex: 1,
+    backgroundColor: theme.surface,
+    borderRadius: radius.sm + 4,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: theme.border,
+  },
+  statValue: { fontSize: typography.size.lg - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary },
+  statLabel: { fontSize: typography.size.xs - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
+  sectionTitle: { fontSize: typography.size.md, fontFamily: typography.fontFamily.heading, color: theme.text, marginBottom: 12 },
   orderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -100,6 +107,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.border,
   },
-  orderAmount: { fontSize: 15, fontWeight: '700', color: theme.text, marginBottom: 4 },
-  advance: { fontSize: 12, color: theme.primary, fontWeight: '700' },
+  orderAmount: { fontSize: typography.size.sm + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text, marginBottom: 4 },
+  advance: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary },
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { theme } from '../theme/theme';
+import { theme, typography } from '../theme/theme';
 import { Button } from '../components/Button';
 import { useSession } from '../store/session';
 
@@ -34,8 +34,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 16,
   },
-  avatarText: { fontSize: 32, fontWeight: '800', color: theme.primary },
-  name: { fontSize: 20, fontWeight: '800', color: theme.text },
-  email: { fontSize: 14, color: theme.muted, marginTop: 4 },
-  role: { fontSize: 12, color: theme.primary, marginTop: 4, textTransform: 'uppercase', fontWeight: '700' },
+  avatarText: { fontSize: 32, fontFamily: typography.fontFamily.headingBold, color: theme.primary },
+  name: { fontSize: 20, fontFamily: typography.fontFamily.headingBold, color: theme.text },
+  email: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
+  role: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.bodySemiBold,
+    color: theme.primary,
+    marginTop: 4,
+    textTransform: 'uppercase',
+  },
 });
