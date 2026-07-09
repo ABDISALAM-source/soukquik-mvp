@@ -1,7 +1,7 @@
 -- Données de démo SoukQuik
 -- Mot de passe pour tous les comptes de démo : "password123"
 -- Hash bcrypt correspondant (10 rounds) :
--- $2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG
+-- $2a$10$WZpqHqPHizK54dcnWD9.luCPAQPDtxbxVsPMVumxFBGZMe/fRA9JW
 
 INSERT INTO categories (id, name, type, icon) VALUES
   (gen_random_uuid(), 'Électronique', 'product', 'zap'),
@@ -15,10 +15,10 @@ INSERT INTO categories (id, name, type, icon) VALUES
 
 -- Utilisateurs de démo
 INSERT INTO users (id, full_name, email, phone, password_hash, role) VALUES
-  ('11111111-1111-1111-1111-111111111111', 'Amina Client', 'amina@example.com', '+25377000001', '$2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG', 'client'),
-  ('22222222-2222-2222-2222-222222222222', 'Farah Vendeuse', 'farah@example.com', '+25377000002', '$2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG', 'vendor'),
-  ('33333333-3333-3333-3333-333333333333', 'Omar Électricien', 'omar@example.com', '+25377000003', '$2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG', 'provider'),
-  ('44444444-4444-4444-4444-444444444444', 'Admin SoukQuik', 'admin@soukquik.dj', '+25377000004', '$2b$10$CwTycUXWue0Thq9StjUM0uJ8lOM8gO4A/9UMEO0jTrHz5r4gt1EaG', 'admin');
+  ('11111111-1111-1111-1111-111111111111', 'Amina Client', 'amina@example.com', '+25377000001', '$2a$10$WZpqHqPHizK54dcnWD9.luCPAQPDtxbxVsPMVumxFBGZMe/fRA9JW', 'client'),
+  ('22222222-2222-2222-2222-222222222222', 'Farah Vendeuse', 'farah@example.com', '+25377000002', '$2a$10$WZpqHqPHizK54dcnWD9.luCPAQPDtxbxVsPMVumxFBGZMe/fRA9JW', 'vendor'),
+  ('33333333-3333-3333-3333-333333333333', 'Omar Électricien', 'omar@example.com', '+25377000003', '$2a$10$WZpqHqPHizK54dcnWD9.luCPAQPDtxbxVsPMVumxFBGZMe/fRA9JW', 'provider'),
+  ('44444444-4444-4444-4444-444444444444', 'Admin SoukQuik', 'admin@soukquik.dj', '+25377000004', '$2a$10$WZpqHqPHizK54dcnWD9.luCPAQPDtxbxVsPMVumxFBGZMe/fRA9JW', 'admin');
 
 -- Boutique de démo
 INSERT INTO shops (id, owner_id, name, description, category_id, latitude, longitude, address)
