@@ -1,0 +1,44 @@
+name: soukquik
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: soukquik_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: soukquik
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: soukquik
+    # Pas de "ports:" ici volontairement : la base ne doit être joignable
+    # que depuis le réseau docker interne (par le conteneur backend), jamais
+    # depuis l'hôte ni depuis internet.
+    volumes:
+      - soukquik_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soukquik"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend
+    container_name: soukquik_backend
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      DATABASE_URL: postgres://soukquik:${POSTGRES_PASSWORD}@postgres:5432/soukquik
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_EXPIRES: 15m
+      JWT_REFRESH_EXPIRES: 7d
+      CORS_ORIGIN: "*"
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  soukquik_pg_data:
