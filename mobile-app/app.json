@@ -8,9 +8,6 @@
     "splash": {
       "backgroundColor": "#FAF7F2"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
       "supportsTablet": true
     },
@@ -23,6 +20,9 @@
         "projectId": "843f757a-2729-4ba3-84fb-0d19f0395014"
       }
     },
-    "owner": "khayali"
+    "owner": "khayali",
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

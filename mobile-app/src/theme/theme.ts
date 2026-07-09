@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const light = {
   primary: '#E4572E',
   secondary: '#2E4057',
@@ -24,3 +26,56 @@ export const dark = {
 
 export type Theme = typeof light;
 export const theme = light;
+
+// Grille d'espacement 4/8px
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+export const radius = {
+  sm: 8,
+  md: 14,
+  lg: 20,
+  pill: 999,
+};
+
+function makeShadow(elevation: number, opacity: number, blur: number) {
+  return Platform.select({
+    ios: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: Math.ceil(elevation / 2) },
+      shadowOpacity: opacity,
+      shadowRadius: blur,
+    },
+    android: { elevation },
+    default: {},
+  }) as object;
+}
+
+export const shadow = {
+  sm: makeShadow(2, 0.06, 4),
+  md: makeShadow(4, 0.08, 8),
+  lg: makeShadow(8, 0.12, 16),
+};
+
+export const typography = {
+  fontFamily: {
+    heading: 'Poppins_600SemiBold',
+    headingBold: 'Poppins_700Bold',
+    body: 'Inter_400Regular',
+    bodyMedium: 'Inter_500Medium',
+    bodySemiBold: 'Inter_600SemiBold',
+  },
+  size: {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 20,
+    xl: 28,
+  },
+};

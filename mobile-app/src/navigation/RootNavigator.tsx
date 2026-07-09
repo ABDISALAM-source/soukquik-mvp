@@ -55,7 +55,7 @@ function MainStack() {
   const RoleTabs = role === 'vendor' ? VendorTabs : role === 'provider' ? ProviderTabs : ClientTabs;
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Screen name="Tabs" component={RoleTabs} />
       <Stack.Screen name="Shop" component={ShopScreen} />
       <Stack.Screen name="Service" component={ServiceScreen} />

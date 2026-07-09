@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
-import { theme } from '../theme/theme';
+import { theme, spacing, radius, typography } from '../theme/theme';
 
 interface Props {
   value: string;
@@ -28,14 +28,15 @@ export function SearchBar({ value, onChangeText, onSubmit, placeholder }: Props)
 const styles = StyleSheet.create({
   wrapper: {
     backgroundColor: theme.surface,
-    borderRadius: 14,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: theme.border,
-    paddingHorizontal: 14,
+    paddingHorizontal: spacing.md - 2,
   },
   input: {
     height: 46,
-    fontSize: 15,
+    fontSize: typography.size.md - 1,
+    fontFamily: typography.fontFamily.body,
     color: theme.text,
   },
 });

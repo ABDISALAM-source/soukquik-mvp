@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { theme } from '../theme/theme';
+import { theme, spacing, radius, typography } from '../theme/theme';
 
 const COLORS: Record<string, string> = {
   pending: theme.muted,
@@ -21,6 +21,15 @@ export function StatusBadge({ status }: { status: string }) {
 }
 
 const styles = StyleSheet.create({
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, alignSelf: 'flex-start' },
-  text: { fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
+  badge: {
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+    alignSelf: 'flex-start',
+  },
+  text: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.fontFamily.bodySemiBold,
+    textTransform: 'capitalize',
+  },
 });
