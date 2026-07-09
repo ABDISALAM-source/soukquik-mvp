@@ -33,6 +33,12 @@ export default function App() {
     ...Ionicons.font,
   });
 
+  // Filet de sécurité : force le chargement même si un état de cache Metro/
+  // Expo Go périmé faisait passer `...Ionicons.font` inaperçu dans useFonts.
+  useEffect(() => {
+    Ionicons.loadFont().catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
