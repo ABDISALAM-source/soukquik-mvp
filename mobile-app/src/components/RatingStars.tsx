@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
@@ -10,10 +10,11 @@ interface RatingStarsProps {
   rating: number;
   count?: number;
   size?: number;
+  /** Rend les étoiles tapables (formulaire d'avis, Phase 3) — lecture seule par défaut. */
+  onChange?: (rating: number) => void;
 }
 
-/** Étoiles en lecture seule (moyenne de notes). La variante interactive (laisser un avis) arrive en Phase 3. */
-export function RatingStars({ rating, count, size = 14 }: RatingStarsProps) {
+export function RatingStars({ rating, count, size = 14, onChange }: RatingStarsProps) {
   const { colors, spacing, typography } = useTheme();
   const styles = useMemo(() => makeStyles(colors, spacing, typography), [colors, spacing, typography]);
 
@@ -25,9 +26,15 @@ export function RatingStars({ rating, count, size = 14 }: RatingStarsProps) {
 
   return (
     <View style={styles.row}>
-      {stars.map((name, i) => (
-        <Ionicons key={i} name={name} size={size} color={colors.primary} />
-      ))}
+      {stars.map((name, i) =>
+        onChange ? (
+          <Pressable key={i} hitSlop={6} onPress={() => onChange(i + 1)}>
+            <Ionicons name={name} size={size} color={colors.primary} />
+          </Pressable>
+        ) : (
+          <Ionicons key={i} name={name} size={size} color={colors.primary} />
+        )
+      )}
       {count !== undefined ? <Text style={styles.count}>({count})</Text> : null}
     </View>
   );
