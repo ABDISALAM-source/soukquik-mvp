@@ -5,14 +5,19 @@
 
 Affiche :
 - Nombre de réservations en attente
-- Revenu estimé du jour (réservations `completed` aujourd'hui)
-- Liste de ses services actifs
-- Liste des réservations avec statut et action accepter/refuser/terminer
+- Total réservations, nombre de services actifs
+- Liste de tous ses services actifs (plus de limitation à un seul), chacun tappable pour éditer
+- Liste des réservations de tous ses services (triées, avec le titre du service concerné), statut et action accepter/refuser/terminer
 
 ## Données consommées
 - `GET /services` (filtré côté client sur `provider_id === me`) ou variante future `GET /services/mine`
-- `GET /services/:serviceId/bookings`
+- `GET /services/:serviceId/bookings` (une requête par service, fusionnées côté client)
 
 ## Actions disponibles
-- Ajouter / modifier un service (prix, description, zone)
+- Ajouter un service (`ServiceFormScreen.tsx`, sans `serviceId`), accessible depuis le dashboard ou l'état vide si aucun service n'existe encore
+- Modifier / désactiver un service (`ServiceFormScreen.tsx`, avec `serviceId` — formulaire prérempli ; désactivation via `DELETE /services/:id`, soft delete)
 - Faire avancer le statut d'une réservation
+
+## Limites connues
+- Pas de "revenu du jour" : `GET /services` n'a pas d'équivalent de `GET /shops/:id/analytics`, aucun endpoint d'analytics n'existe pour les services/réservations (prévu dans un lot suivant).
+- Un service désactivé disparaît de la liste (même limite que les produits côté vendeur).

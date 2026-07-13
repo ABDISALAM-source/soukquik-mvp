@@ -84,7 +84,8 @@ export const shopsRepository = {
     const { rows: orderRows } = await pool.query(
       `SELECT COUNT(*)::int AS total_orders,
               COALESCE(SUM(total_amount),0)::numeric AS revenue_total,
-              COUNT(*) FILTER (WHERE created_at::date = now()::date)::int AS orders_today
+              COUNT(*) FILTER (WHERE created_at::date = now()::date)::int AS orders_today,
+              COALESCE(SUM(total_amount) FILTER (WHERE created_at::date = now()::date AND status != 'cancelled'),0)::numeric AS revenue_today
        FROM orders WHERE shop_id = $1`,
       [shopId]
     );
@@ -93,6 +94,7 @@ export const shopsRepository = {
       activeProducts: productRows[0].active,
       totalOrders: orderRows[0].total_orders,
       revenueTotal: Number(orderRows[0].revenue_total),
+      revenueToday: Number(orderRows[0].revenue_today),
       ordersToday: orderRows[0].orders_today,
     };
   },

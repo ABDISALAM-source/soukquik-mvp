@@ -133,6 +133,7 @@ export function VendorDashboardScreen() {
           {analytics && (
             <View style={styles.statsRow}>
               <Stat label="Commandes du jour" value={analytics.ordersToday} styles={styles} />
+              <Stat label="Revenu du jour" value={`${analytics.revenueToday} DJF`} styles={styles} />
               <Stat label="Revenu total" value={`${analytics.revenueTotal} DJF`} styles={styles} />
               <Stat label="Produits actifs" value={analytics.activeProducts} styles={styles} />
             </View>
@@ -250,9 +251,10 @@ function makeStyles(
     container: { flex: 1, backgroundColor: theme.background },
     content: { padding: 20, paddingTop: 60, paddingBottom: spacing.xxl },
     title: { fontSize: 20, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: 16 },
-    statsRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
+    statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
     stat: {
-      flex: 1,
+      flexBasis: '47%',
+      flexGrow: 1,
       backgroundColor: theme.surface,
       borderRadius: radius.sm + 4,
       padding: 12,

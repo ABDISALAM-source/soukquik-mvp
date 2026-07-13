@@ -73,6 +73,31 @@ export async function fetchService(id: string) {
   return res.data.data;
 }
 
+export interface ServiceInput {
+  title: string;
+  description?: string;
+  categoryId?: string;
+  price: number;
+  priceUnit?: string;
+  latitude?: number;
+  longitude?: number;
+  serviceAreaKm?: number;
+}
+
+export async function createService(input: ServiceInput) {
+  const res = await api.post('/services', input);
+  return res.data.data;
+}
+
+export async function updateService(id: string, input: Partial<ServiceInput>) {
+  const res = await api.patch(`/services/${id}`, input);
+  return res.data.data;
+}
+
+export async function deactivateService(id: string) {
+  await api.delete(`/services/${id}`);
+}
+
 export async function search(params: { q?: string; type?: string; category?: string; sort?: string }) {
   const res = await api.get('/search', { params });
   return res.data.data;
