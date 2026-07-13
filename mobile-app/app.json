@@ -10,13 +10,17 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.soukquik.app",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "SoukQuik utilise ta position pour te montrer les boutiques et prestataires les plus proches de toi."
       }
     },
     "android": {
       "package": "com.soukquik.app",
-      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
       "config": {
         "googleMaps": {
           "apiKey": ""
@@ -38,7 +42,8 @@
         {
           "locationWhenInUsePermission": "SoukQuik utilise ta position pour te montrer les boutiques et prestataires les plus proches de toi."
         }
-      ]
+      ],
+      "expo-web-browser"
     ]
   }
 }
