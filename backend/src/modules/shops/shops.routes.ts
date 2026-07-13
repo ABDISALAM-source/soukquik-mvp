@@ -5,6 +5,7 @@ import { requireRole } from '../../common/guards/role.guard';
 import { shopsController } from './shops.controller';
 import productsRoutesForShop from '../products/products.routesForShop';
 import ordersRoutesForShop from '../orders/orders.routesForShop';
+import presenceRoutesForShop from '../presence/presence.routesForShop';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.get('/:id/analytics', authGuard, requireRole(['vendor']), asyncHandler(sh
 // sous-ressources
 router.use('/:shopId/products', productsRoutesForShop);
 router.use('/:shopId/orders', ordersRoutesForShop);
+router.use('/:shopId/presence', presenceRoutesForShop);
 
 export default router;

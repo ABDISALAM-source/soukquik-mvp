@@ -88,6 +88,48 @@ Toutes les réponses suivent le format :
 | GET | /admin/stats | admin |
 | PATCH | /admin/users/:id/status | admin |
 
+## Likes (Phase 1/7 — togglable, un like par user/cible)
+| Méthode | Route | Rôle |
+|---|---|---|
+| POST | /likes/toggle | authentifié — body `{targetType, targetId}`, renvoie `{liked, count}` |
+| GET | /likes/count?targetType=&targetId= | public |
+| GET | /likes/mine?targetType=&targetId= | authentifié |
+
+## Reviews (Phase 1/3 — avis boutique/service/produit)
+| Méthode | Route | Rôle |
+|---|---|---|
+| POST | /reviews | authentifié — body `{targetType, targetId, rating(1-5), comment?}`, un seul avis par user/cible (409 sinon) |
+| GET | /reviews?targetType=&targetId= | public — renvoie `{reviews, summary:{count,average}}` |
+| DELETE | /reviews/:id | authentifié (auteur) |
+
+## Notifications (Phase 1/7)
+| Méthode | Route | Rôle |
+|---|---|---|
+| GET | /notifications | authentifié — 50 dernières, plus récentes en premier |
+| GET | /notifications/unread-count | authentifié |
+| PATCH | /notifications/:id/read | authentifié (propriétaire) |
+| PATCH | /notifications/read-all | authentifié |
+
+Déclenchées en interne par d'autres modules (pas d'endpoint de création publique) — ex: changement de statut d'une commande notifie le client (`orders.service.ts`).
+
+## Promotions (Phase 1/9 — publicité sponsorisée)
+| Méthode | Route | Rôle |
+|---|---|---|
+| POST | /promotions | vendor/provider — body `{targetType, targetId, budget, startsAt?, endsAt?}`, statut initial `pending` |
+| GET | /promotions/mine | vendor/provider (propriétaire) |
+| GET | /promotions/active?limit= | public — actives uniquement, rotation pondérée par budget restant |
+| GET | /promotions | admin — toutes, pour validation |
+| PATCH | /promotions/:id/status | admin — `pending`/`active`/`expired` |
+| POST | /promotions/:id/impression | public — incrémente le compteur |
+| POST | /promotions/:id/click | public — incrémente le compteur |
+
+## Presence (Phase 1/8 — présence boutique, sous-ressource de Shops)
+| Méthode | Route | Rôle |
+|---|---|---|
+| GET | /shops/:shopId/presence | public — `{count, appWideCount, intensity}` (intensité = ratio présence boutique / utilisateurs actifs, données réelles actuelles ; le flux temps réel complet via WebSocket est la Phase 8) |
+| POST | /shops/:shopId/presence/enter | authentifié |
+| POST | /shops/:shopId/presence/leave | authentifié |
+
 ## Codes d'erreur HTTP
 - 400 : validation invalide
 - 401 : non authentifié / token invalide

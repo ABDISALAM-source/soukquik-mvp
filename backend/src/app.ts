@@ -15,6 +15,10 @@ import bookingsRoutes from './modules/bookings/bookings.routes';
 import chatRoutes from './modules/chat/chat.routes';
 import searchRoutes from './modules/search/search.routes';
 import adminRoutes from './modules/admin/admin.routes';
+import likesRoutes from './modules/likes/likes.routes';
+import reviewsRoutes from './modules/reviews/reviews.routes';
+import notificationsRoutes from './modules/notifications/notifications.routes';
+import promotionsRoutes from './modules/promotions/promotions.routes';
 
 export function createApp() {
   const app = express();
@@ -30,7 +34,7 @@ export function createApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/users', usersRoutes);
   app.use('/api/categories', categoriesRoutes);
-  app.use('/api/shops', shopsRoutes); // inclut aussi /shops/:shopId/products et /shops/:shopId/orders
+  app.use('/api/shops', shopsRoutes); // inclut aussi /shops/:shopId/products, /orders et /presence
   app.use('/api/products', productsRoutes); // /products/:id
   app.use('/api/services', servicesRoutes); // inclut aussi /services/:serviceId/bookings
   app.use('/api/orders', ordersRoutes);
@@ -38,6 +42,10 @@ export function createApp() {
   app.use('/api/chats', chatRoutes);
   app.use('/api/search', searchRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/likes', likesRoutes);
+  app.use('/api/reviews', reviewsRoutes);
+  app.use('/api/notifications', notificationsRoutes);
+  app.use('/api/promotions', promotionsRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({ success: false, data: null, error: 'Route introuvable' });
