@@ -1,5 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { StatusBadge } from '../components/StatusBadge';
@@ -18,7 +20,9 @@ export function VendorDashboardScreen() {
   const { colors, spacing, radius, typography } = useTheme();
   const styles = useMemo(() => makeStyles(colors, spacing, radius, typography), [colors, spacing, radius, typography]);
   const { user } = useSession();
+  const navigation = useNavigation<any>();
   const [shop, setShop] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [shopProducts, setShopProducts] = useState<any[]>([]);
@@ -27,23 +31,41 @@ export function VendorDashboardScreen() {
   const [budget, setBudget] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    api.get('/shops').then(async (res) => {
-      const mine = res.data.data.find((s: any) => s.ownerId === user?.id);
-      setShop(mine || null);
-      if (mine) {
-        const analyticsRes = await api.get(`/shops/${mine.id}/analytics`);
-        setAnalytics(analyticsRes.data.data);
-        const ordersData = await ordersApi.fetchShopOrders(mine.id);
-        setOrders(ordersData);
-        const products = await catalogApi.fetchShopProducts(mine.id);
-        setShopProducts(products);
-        setPromoTarget({ type: 'shop', id: mine.id });
-        const promos = await promotionsApi.fetchMyPromotions();
-        setMyPromotions(promos);
-      }
-    });
-  }, []);
+  // useFocusEffect (pas useEffect) : au retour de CreateShopScreen ou
+  // ProductFormScreen, ce dashboard doit se recharger pour refléter la
+  // boutique/le produit qui vient d'être créé ou modifié.
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      setLoading(true);
+      api
+        .get('/shops')
+        .then(async (res) => {
+          if (cancelled) return;
+          const mine = res.data.data.find((s: any) => s.ownerId === user?.id);
+          setShop(mine || null);
+          if (mine) {
+            const analyticsRes = await api.get(`/shops/${mine.id}/analytics`);
+            if (cancelled) return;
+            setAnalytics(analyticsRes.data.data);
+            const ordersData = await ordersApi.fetchShopOrders(mine.id);
+            if (cancelled) return;
+            setOrders(ordersData);
+            const products = await catalogApi.fetchShopProducts(mine.id);
+            if (cancelled) return;
+            setShopProducts(products);
+            setPromoTarget({ type: 'shop', id: mine.id });
+            const promos = await promotionsApi.fetchMyPromotions();
+            if (cancelled) return;
+            setMyPromotions(promos);
+          }
+        })
+        .finally(() => !cancelled && setLoading(false));
+      return () => {
+        cancelled = true;
+      };
+    }, [user?.id])
+  );
 
   async function advanceStatus(orderId: string, current: string) {
     const flow: Record<string, string> = { pending: 'accepted', accepted: 'preparing', preparing: 'delivered' };
@@ -73,7 +95,16 @@ export function VendorDashboardScreen() {
     }
   }
 
-  if (!shop) return <EmptyState message="Créez d'abord votre boutique pour voir le dashboard." />;
+  if (loading) return <EmptyState message="Chargement..." />;
+
+  if (!shop) {
+    return (
+      <View style={styles.noShop}>
+        <EmptyState message="Tu n'as pas encore de boutique." />
+        <Button label="Créer ma boutique" onPress={() => navigation.navigate('CreateShop')} />
+      </View>
+    );
+  }
 
   return (
     <FlatList
@@ -105,6 +136,37 @@ export function VendorDashboardScreen() {
               <Stat label="Revenu total" value={`${analytics.revenueTotal} DJF`} styles={styles} />
               <Stat label="Produits actifs" value={analytics.activeProducts} styles={styles} />
             </View>
+          )}
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Produits</Text>
+            <Pressable
+              style={styles.addButton}
+              onPress={() => navigation.navigate('ProductForm', { shopId: shop.id })}
+            >
+              <Ionicons name="add" size={16} color={colors.primary} />
+              <Text style={styles.addButtonText}>Ajouter</Text>
+            </Pressable>
+          </View>
+
+          {shopProducts.length === 0 ? (
+            <Text style={styles.emptyHint}>Aucun produit pour le moment.</Text>
+          ) : (
+            shopProducts.map((p) => (
+              <Pressable
+                key={p.id}
+                style={styles.productRow}
+                onPress={() => navigation.navigate('ProductForm', { shopId: shop.id, productId: p.id })}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.productName}>{p.name}</Text>
+                  <Text style={styles.productMeta}>
+                    {p.price} DJF · Stock: {p.stock}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+              </Pressable>
+            ))
           )}
 
           <Text style={styles.sectionTitle}>Commandes récentes</Text>
@@ -209,6 +271,20 @@ function makeStyles(
     },
     orderAmount: { fontSize: typography.size.sm + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text, marginBottom: 4 },
     advance: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary },
+    noShop: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 100, gap: spacing.lg },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+    addButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    addButtonText: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary },
+    emptyHint: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.body, color: theme.muted, marginBottom: spacing.md },
+    productRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm + 4,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    productName: { fontSize: typography.size.sm + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text },
+    productMeta: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 2 },
     promoSection: { marginTop: spacing.lg + 8 },
     label: {
       fontSize: typography.size.sm,

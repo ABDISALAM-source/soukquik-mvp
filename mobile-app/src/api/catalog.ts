@@ -15,9 +15,52 @@ export async function fetchShopProducts(shopId: string) {
   return res.data.data;
 }
 
+export interface ShopInput {
+  name: string;
+  description?: string;
+  categoryId?: string;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+  logoUrl?: string;
+}
+
+export async function createShop(input: ShopInput) {
+  const res = await api.post('/shops', input);
+  return res.data.data;
+}
+
+export async function updateShop(id: string, input: Partial<ShopInput>) {
+  const res = await api.patch(`/shops/${id}`, input);
+  return res.data.data;
+}
+
 export async function fetchProduct(id: string) {
   const res = await api.get(`/products/${id}`);
   return res.data.data;
+}
+
+export interface ProductInput {
+  name: string;
+  description?: string;
+  categoryId?: string;
+  price: number;
+  stock?: number;
+  imageUrl?: string;
+}
+
+export async function createProduct(shopId: string, input: ProductInput) {
+  const res = await api.post(`/shops/${shopId}/products`, input);
+  return res.data.data;
+}
+
+export async function updateProduct(id: string, input: Partial<ProductInput>) {
+  const res = await api.patch(`/products/${id}`, input);
+  return res.data.data;
+}
+
+export async function deactivateProduct(id: string) {
+  await api.delete(`/products/${id}`);
 }
 
 export async function fetchServices(params?: { category?: string; q?: string; sort?: string }) {
