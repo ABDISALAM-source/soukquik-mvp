@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SearchBar } from '../components/SearchBar';
 import { Card } from '../components/Card';
 import { Carousel } from '../components/Carousel';
@@ -17,6 +17,8 @@ import { NotificationBell } from '../components/NotificationBell';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import * as catalogApi from '../api/catalog';
+import * as likesApi from '../api/likes';
+import * as notificationsApi from '../api/notifications';
 
 // La table categories stocke des noms d'icônes façon Feather ("zap",
 // "wrench"...) côté seed réel, et on garde aussi des clés françaises pour
@@ -114,6 +116,7 @@ export function HomeScreen() {
   const [categories, setCategories] = useState<any[]>([]);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     Promise.all([
@@ -121,27 +124,43 @@ export function HomeScreen() {
       catalogApi.fetchServices(),
       catalogApi.search({ type: 'product' }),
       catalogApi.fetchCategories(),
+      likesApi.fetchMyLikes('product'),
     ])
-      .then(([s, sv, searchRes, cats]) => {
+      .then(([s, sv, searchRes, cats, likedProducts]) => {
         setShops(s);
         setServices(sv);
         setProducts(searchRes.products || []);
         setCategories(cats.length ? cats : FALLBACK_CATEGORIES);
+        setLikedIds(new Set(likedProducts.map((l) => l.targetId)));
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Le compteur non-lu doit se rafraîchir à chaque retour sur l'accueil
+  // (ex: après avoir lu des notifications ailleurs), pas juste au montage.
+  useFocusEffect(
+    useCallback(() => {
+      notificationsApi.fetchUnreadCount().then((r) => setUnreadCount(r.count)).catch(() => {});
+    }, [])
+  );
 
   function goSearch() {
     navigation.navigate('Search', { initialQuery: query });
   }
 
-  function toggleLike(id: string) {
+  async function toggleLike(id: string) {
+    // Optimiste : bascule tout de suite, resynchronise si l'appel échoue.
     setLikedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+    try {
+      await likesApi.toggleLike('product', id);
+    } catch {
+      likesApi.fetchMyLikes('product').then((liked) => setLikedIds(new Set(liked.map((l) => l.targetId)))).catch(() => {});
+    }
   }
 
   const showShops = filter === 'all' || filter === 'shops' || filter === 'nearby' || filter === 'fast';
@@ -189,7 +208,7 @@ export function HomeScreen() {
               <Text style={styles.tagline}>Tout. Partout. Pour vous.</Text>
             </View>
           </View>
-          <NotificationBell count={3} onPress={notYetAvailable} />
+          <NotificationBell count={unreadCount} onPress={() => navigation.navigate('Notifications')} />
         </View>
 
         <SearchBar

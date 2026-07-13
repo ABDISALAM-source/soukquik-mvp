@@ -5,3 +5,7 @@ export const targetSchema = z.object({
   targetId: z.string().uuid(),
 });
 export type TargetInput = z.infer<typeof targetSchema>;
+
+export const mineListQuerySchema = z.object({
+  targetType: z.enum(['shop', 'service', 'product']).optional(),
+});

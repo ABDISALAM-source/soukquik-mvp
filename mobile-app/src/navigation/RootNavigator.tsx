@@ -21,6 +21,10 @@ import { BookingScreen } from '../screens/BookingScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { VendorDashboardScreen } from '../screens/VendorDashboardScreen';
 import { ProviderDashboardScreen } from '../screens/ProviderDashboardScreen';
+import { FavoritesScreen } from '../screens/FavoritesScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
+import { HistoryScreen } from '../screens/HistoryScreen';
+import { OnboardingScreen } from '../screens/OnboardingScreen';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -88,6 +92,11 @@ function ClientTabs() {
         name="Cart"
         component={CartScreen}
         options={{ title: 'Panier', tabBarButton: ElevatedTabButton }}
+      />
+      <Tab.Screen
+        name="Favorites"
+        component={FavoritesScreen}
+        options={{ title: 'Favoris', tabBarIcon: tabIcon('heart', 'heart-outline') }}
       />
       <Tab.Screen
         name="Profile"
@@ -160,16 +169,19 @@ function MainStack() {
       <Stack.Screen name="Service" component={ServiceScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <Stack.Screen name="Booking" component={BookingScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="History" component={HistoryScreen} />
     </Stack.Navigator>
   );
 }
 
 export function RootNavigator() {
   const user = useSession((s) => s.user);
+  const justRegistered = useSession((s) => s.justRegistered);
 
   return (
     <NavigationContainer>
-      {user ? <MainStack /> : <AuthScreen />}
+      {!user ? <AuthScreen /> : justRegistered ? <OnboardingScreen /> : <MainStack />}
     </NavigationContainer>
   );
 }

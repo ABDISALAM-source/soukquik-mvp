@@ -41,6 +41,7 @@ export const ordersService = {
     await notificationsService.create(order.client_id, 'order_status_changed', {
       orderId,
       status,
+      shopId: shop.id,
       shopName: shop.name,
     });
     return updated;

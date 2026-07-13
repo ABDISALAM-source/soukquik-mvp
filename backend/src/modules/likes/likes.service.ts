@@ -22,4 +22,8 @@ export const likesService = {
     const liked = await likesRepository.exists(userId, input.targetType, input.targetId);
     return { liked };
   },
+
+  mineList(userId: string, targetType?: string) {
+    return likesRepository.findByUser(userId, targetType);
+  },
 };

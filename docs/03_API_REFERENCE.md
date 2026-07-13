@@ -94,6 +94,7 @@ Toutes les réponses suivent le format :
 | POST | /likes/toggle | authentifié — body `{targetType, targetId}`, renvoie `{liked, count}` |
 | GET | /likes/count?targetType=&targetId= | public |
 | GET | /likes/mine?targetType=&targetId= | authentifié |
+| GET | /likes/mine-list?targetType= | authentifié — tous les likes de l'utilisateur (targetType optionnel), utilisé par l'écran Favoris |
 
 ## Reviews (Phase 1/3 — avis boutique/service/produit)
 | Méthode | Route | Rôle |

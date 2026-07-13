@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ok } from '../../common/response';
 import { likesService } from './likes.service';
-import { targetSchema } from './likes.types';
+import { targetSchema, mineListQuerySchema } from './likes.types';
 
 export const likesController = {
   async toggle(req: Request, res: Response) {
@@ -19,6 +19,12 @@ export const likesController = {
   async mine(req: Request, res: Response) {
     const input = targetSchema.parse({ targetType: req.query.targetType, targetId: req.query.targetId });
     const result = await likesService.mine(req.user!.id, input);
+    return ok(res, result);
+  },
+
+  async mineList(req: Request, res: Response) {
+    const { targetType } = mineListQuerySchema.parse({ targetType: req.query.targetType });
+    const result = await likesService.mineList(req.user!.id, targetType);
     return ok(res, result);
   },
 };

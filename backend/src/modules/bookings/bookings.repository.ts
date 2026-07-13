@@ -22,8 +22,13 @@ export const bookingsRepository = {
   },
 
   async findByClient(clientId: string) {
-    const { rows } = await pool.query('SELECT * FROM bookings WHERE client_id = $1 ORDER BY created_at DESC', [clientId]);
-    return rows.map(mapBooking);
+    const { rows } = await pool.query(
+      `SELECT b.*, sv.title AS service_title FROM bookings b
+       JOIN services sv ON sv.id = b.service_id
+       WHERE b.client_id = $1 ORDER BY b.created_at DESC`,
+      [clientId]
+    );
+    return rows.map((r) => ({ ...mapBooking(r), serviceTitle: r.service_title }));
   },
 
   async findByService(serviceId: string) {

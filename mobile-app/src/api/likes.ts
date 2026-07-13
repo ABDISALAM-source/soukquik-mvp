@@ -16,3 +16,14 @@ export async function fetchMyLike(targetType: TargetType, targetId: string) {
   const res = await api.get('/likes/mine', { params: { targetType, targetId } });
   return res.data.data as { liked: boolean };
 }
+
+export interface LikedTarget {
+  targetType: TargetType;
+  targetId: string;
+  createdAt: string;
+}
+
+export async function fetchMyLikes(targetType?: TargetType) {
+  const res = await api.get('/likes/mine-list', { params: targetType ? { targetType } : undefined });
+  return res.data.data as LikedTarget[];
+}

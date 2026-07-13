@@ -7,6 +7,7 @@ const router = Router();
 
 router.get('/count', asyncHandler(likesController.count));
 router.get('/mine', authGuard, asyncHandler(likesController.mine));
+router.get('/mine-list', authGuard, asyncHandler(likesController.mineList));
 router.post('/toggle', authGuard, asyncHandler(likesController.toggle));
 
 export default router;

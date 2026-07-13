@@ -25,7 +25,7 @@ export function AuthScreen() {
         mode === 'login'
           ? await authApi.login({ email, password })
           : await authApi.register({ fullName, email, phone, password, role });
-      setSession(result.user, result.accessToken, result.refreshToken);
+      setSession(result.user, result.accessToken, result.refreshToken, mode === 'register');
     } catch (err: any) {
       Alert.alert('Erreur', err.message);
     } finally {

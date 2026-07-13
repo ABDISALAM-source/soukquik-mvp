@@ -15,6 +15,11 @@ export async function fetchShopProducts(shopId: string) {
   return res.data.data;
 }
 
+export async function fetchProduct(id: string) {
+  const res = await api.get(`/products/${id}`);
+  return res.data.data;
+}
+
 export async function fetchServices(params?: { category?: string; q?: string; sort?: string }) {
   const res = await api.get('/services', { params });
   return res.data.data;

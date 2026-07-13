@@ -31,4 +31,18 @@ export const likesRepository = {
     );
     return rows[0].count as number;
   },
+
+  async findByUser(userId: string, targetType?: string) {
+    const params: any[] = [userId];
+    let extra = '';
+    if (targetType) {
+      params.push(targetType);
+      extra = `AND target_type = $${params.length}`;
+    }
+    const { rows } = await pool.query(
+      `SELECT target_type, target_id, created_at FROM likes WHERE user_id = $1 ${extra} ORDER BY created_at DESC`,
+      params
+    );
+    return rows.map((r) => ({ targetType: r.target_type, targetId: r.target_id, createdAt: r.created_at }));
+  },
 };

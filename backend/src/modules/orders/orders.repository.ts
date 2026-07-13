@@ -44,8 +44,13 @@ export const ordersRepository = {
   },
 
   async findByClient(clientId: string) {
-    const { rows } = await pool.query('SELECT * FROM orders WHERE client_id = $1 ORDER BY created_at DESC', [clientId]);
-    return rows.map(mapOrder);
+    const { rows } = await pool.query(
+      `SELECT o.*, s.name AS shop_name FROM orders o
+       JOIN shops s ON s.id = o.shop_id
+       WHERE o.client_id = $1 ORDER BY o.created_at DESC`,
+      [clientId]
+    );
+    return rows.map((r) => ({ ...mapOrder(r), shopName: r.shop_name }));
   },
 
   async findByShop(shopId: string) {
