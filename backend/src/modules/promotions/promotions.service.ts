@@ -17,14 +17,16 @@ async function assertOwnsTarget(ownerId: string, targetType: string, targetId: s
     if (!shop) throw Errors.notFound('Boutique introuvable');
     if (shop.owner_id !== ownerId) throw Errors.forbidden("Vous n'êtes pas propriétaire de cette boutique");
   } else if (targetType === 'product') {
+    // findById renvoie la ligne brute (snake_case), pas l'objet mappé.
     const product = await productsRepository.findById(targetId);
     if (!product) throw Errors.notFound('Produit introuvable');
-    const shop = await shopsRepository.findRawById(product.shopId);
+    const shop = await shopsRepository.findRawById(product.shop_id);
     if (!shop || shop.owner_id !== ownerId) throw Errors.forbidden("Vous n'êtes pas propriétaire de ce produit");
   } else if (targetType === 'service') {
+    // Idem : ligne brute, le champ est provider_id et non providerId.
     const service = await servicesRepository.findById(targetId);
     if (!service) throw Errors.notFound('Service introuvable');
-    if (service.providerId !== ownerId) throw Errors.forbidden("Vous n'êtes pas propriétaire de ce service");
+    if (service.provider_id !== ownerId) throw Errors.forbidden("Vous n'êtes pas propriétaire de ce service");
   }
 }
 
