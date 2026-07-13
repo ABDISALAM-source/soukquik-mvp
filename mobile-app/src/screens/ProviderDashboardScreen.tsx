@@ -107,6 +107,12 @@ export function ProviderDashboardScreen() {
             <Stat label="Services actifs" value={analytics?.activeServices ?? services.length} styles={styles} />
           </View>
 
+          <Pressable style={styles.availabilityLink} onPress={() => navigation.navigate('Availability')}>
+            <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+            <Text style={styles.availabilityLinkText}>Gérer mes disponibilités</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+          </Pressable>
+
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Mes services</Text>
             <Pressable style={styles.addButton} onPress={() => navigation.navigate('ServiceForm')}>
@@ -164,6 +170,19 @@ function makeStyles(
     },
     statValue: { fontSize: typography.size.lg - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary },
     statLabel: { fontSize: typography.size.xs - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
+    availabilityLink: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: theme.surface,
+      borderRadius: radius.sm + 4,
+      borderWidth: 1,
+      borderColor: theme.border,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      marginBottom: 24,
+    },
+    availabilityLinkText: { flex: 1, fontSize: typography.size.sm + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
     sectionTitle: { fontSize: typography.size.md, fontFamily: typography.fontFamily.heading, color: theme.text, marginBottom: 12 },
     addButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },

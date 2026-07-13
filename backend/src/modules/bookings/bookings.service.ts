@@ -1,6 +1,7 @@
 import { Errors } from '../../common/errors';
 import { servicesRepository } from '../services/services.repository';
 import { notificationsService } from '../notifications/notifications.service';
+import { availabilityService } from '../availability/availability.service';
 import { bookingsRepository } from './bookings.repository';
 import { CreateBookingInput } from './bookings.types';
 
@@ -8,6 +9,10 @@ export const bookingsService = {
   async create(clientId: string, input: CreateBookingInput) {
     const service = await servicesRepository.findById(input.serviceId);
     if (!service || !service.is_active) throw Errors.notFound('Service introuvable');
+    if (input.scheduledAt) {
+      const available = await availabilityService.isAvailableAt(service.provider_id, input.scheduledAt);
+      if (!available) throw Errors.badRequest("Ce créneau n'est pas disponible");
+    }
     return bookingsRepository.create(clientId, input.serviceId, input.scheduledAt, input.notes);
   },
 

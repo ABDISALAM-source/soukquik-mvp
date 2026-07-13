@@ -29,6 +29,7 @@ import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
 import { CreateShopScreen } from '../screens/CreateShopScreen';
 import { ProductFormScreen } from '../screens/ProductFormScreen';
 import { ServiceFormScreen } from '../screens/ServiceFormScreen';
+import { AvailabilityScreen } from '../screens/AvailabilityScreen';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -204,6 +205,7 @@ function MainStack() {
       <Stack.Screen name="CreateShop" component={CreateShopScreen} />
       <Stack.Screen name="ProductForm" component={ProductFormScreen} />
       <Stack.Screen name="ServiceForm" component={ServiceFormScreen} />
+      <Stack.Screen name="Availability" component={AvailabilityScreen} />
     </Stack.Navigator>
   );
 }

@@ -70,10 +70,24 @@ Toutes les réponses suivent le format :
 ## Bookings
 | Méthode | Route | Rôle |
 |---|---|---|
-| POST | /bookings | client |
+| POST | /bookings | client — si `scheduledAt` est fourni, rejeté en 400 si le créneau n'est pas disponible (voir Availability) |
 | GET | /bookings/me | client |
 | GET | /services/:serviceId/bookings | provider (owner) |
 | PATCH | /bookings/:id/status | provider (owner) |
+
+## Availability (Phase 6 — disponibilités des prestataires)
+Modèle : horaires hebdomadaires récurrents (`availability_rules`, un ou plusieurs créneaux par jour de semaine) + exceptions ponctuelles (`availability_exceptions`, remplacent entièrement les règles hebdo pour leur date — fermeture complète ou horaire différent). Si un prestataire n'a **aucune** règle configurée, il est considéré sans contrainte d'horaire (comportement rétrocompatible avec les réservations d'avant cette fonctionnalité).
+
+| Méthode | Route | Rôle |
+|---|---|---|
+| GET | /availability/mine | provider — `{rules, exceptions}` |
+| POST | /availability/rules | provider — body `{weekday(0-6, 0=dimanche), startTime, endTime}` (format `HH:MM`) |
+| DELETE | /availability/rules/:id | provider (owner) |
+| POST | /availability/exceptions | provider — body `{date(YYYY-MM-DD), isClosed, startTime?, endTime?}` ; upsert (une seule exception par date, la recréer la remplace) |
+| DELETE | /availability/exceptions/:id | provider (owner) |
+| GET | /services/:id/availability?date=YYYY-MM-DD | public — résout la disponibilité du prestataire de ce service pour cette date : `{date, closed, windows:[{startTime,endTime}], hasAnyRule}` |
+
+Limite connue : le modèle ne gère pas les fuseaux horaires — les horaires sont traités comme des heures d'horloge "nominales" (UTC par convention interne), cohérent avec le reste de l'app qui ne gère aucun fuseau horaire ailleurs non plus.
 
 ## Chat
 | Méthode | Route | Rôle |

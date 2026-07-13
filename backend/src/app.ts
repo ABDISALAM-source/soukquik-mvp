@@ -19,6 +19,7 @@ import likesRoutes from './modules/likes/likes.routes';
 import reviewsRoutes from './modules/reviews/reviews.routes';
 import notificationsRoutes from './modules/notifications/notifications.routes';
 import promotionsRoutes from './modules/promotions/promotions.routes';
+import availabilityRoutes from './modules/availability/availability.routes';
 
 export function createApp() {
   const app = express();
@@ -46,6 +47,7 @@ export function createApp() {
   app.use('/api/reviews', reviewsRoutes);
   app.use('/api/notifications', notificationsRoutes);
   app.use('/api/promotions', promotionsRoutes);
+  app.use('/api/availability', availabilityRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({ success: false, data: null, error: 'Route introuvable' });

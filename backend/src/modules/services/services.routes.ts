@@ -10,6 +10,7 @@ const router = Router();
 router.get('/', asyncHandler(servicesController.list));
 router.get('/analytics/mine', authGuard, requireRole(['provider']), asyncHandler(servicesController.analyticsMine));
 router.get('/:id', asyncHandler(servicesController.getById));
+router.get('/:id/availability', asyncHandler(servicesController.availability));
 router.post('/', authGuard, requireRole(['provider']), asyncHandler(servicesController.create));
 router.patch('/:id', authGuard, requireRole(['provider']), asyncHandler(servicesController.update));
 router.delete('/:id', authGuard, requireRole(['provider']), asyncHandler(servicesController.remove));

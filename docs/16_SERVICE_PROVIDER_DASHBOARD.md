@@ -17,8 +17,14 @@ Affiche :
 - Ajouter un service (`ServiceFormScreen.tsx`, sans `serviceId`), accessible depuis le dashboard ou l'état vide si aucun service n'existe encore
 - Modifier / désactiver un service (`ServiceFormScreen.tsx`, avec `serviceId` — formulaire prérempli ; désactivation via `DELETE /services/:id`, soft delete)
 - Faire avancer le statut d'une réservation
+- Gérer ses disponibilités (`AvailabilityScreen.tsx`, lien "Gérer mes disponibilités" sur le dashboard) : horaires hebdomadaires récurrents par jour + exceptions ponctuelles (jour fermé ou horaire différent). Voir 03_API_REFERENCE.md, section Availability, pour le modèle complet.
+
+## Réservation avec créneau (côté client)
+`BookingScreen.tsx` propose désormais une vraie sélection date/heure au lieu d'un simple champ notes : chips des 14 prochains jours, puis créneaux de 30 min générés à partir de `GET /services/:id/availability?date=...` pour la date choisie (fermé → message + date à changer ; pas de règles configurées → créneaux par défaut 08h-20h, purement indicatifs). Le serveur revalide systématiquement à la création (`bookings.service.create`), donc cette UI est un guide, pas la source de vérité.
 
 ## Limites connues
 - Le revenu est calculé à partir du prix *actuel* du service (`services.price`), pas d'un instantané pris à la réservation — contrairement aux commandes (`order_items.unit_price`), les réservations ne gardent pas de trace du prix au moment de la réservation. Si un prestataire change son prix, le revenu des réservations passées se recalcule rétroactivement avec le nouveau prix. Corriger nécessiterait une colonne `price` sur `bookings`, hors scope de ce lot.
 - "Revenu du jour" = réservations `completed` créées aujourd'hui (`created_at`), pas terminées aujourd'hui — il n'y a pas de colonne `completed_at`, même limite que `revenueToday` côté boutique.
 - Un service désactivé disparaît de la liste (même limite que les produits côté vendeur).
+- Les disponibilités ne gèrent pas les fuseaux horaires (voir 03_API_REFERENCE.md).
+- La durée d'un rendez-vous n'existe pas dans le schéma : les créneaux générés (30 min) sont des heures de départ indicatives, pas des blocs réservés — deux clients pourraient réserver le même horaire tant que rien ne marque un créneau comme "pris" une fois booké (pas de conflit détecté entre réservations, seulement entre une réservation et les horaires d'ouverture).
