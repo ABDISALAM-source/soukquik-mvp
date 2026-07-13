@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
-import { theme, spacing, typography } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { Palette } from '../theme/theme';
 
 type StarName = 'star' | 'star-half' | 'star-outline';
 
@@ -13,6 +14,9 @@ interface RatingStarsProps {
 
 /** Étoiles en lecture seule (moyenne de notes). La variante interactive (laisser un avis) arrive en Phase 3. */
 export function RatingStars({ rating, count, size = 14 }: RatingStarsProps) {
+  const { colors, spacing, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, typography), [colors, spacing, typography]);
+
   const stars: StarName[] = [1, 2, 3, 4, 5].map((position) => {
     if (rating >= position) return 'star';
     if (rating >= position - 0.5) return 'star-half';
@@ -22,19 +26,25 @@ export function RatingStars({ rating, count, size = 14 }: RatingStarsProps) {
   return (
     <View style={styles.row}>
       {stars.map((name, i) => (
-        <Ionicons key={i} name={name} size={size} color={theme.primary} />
+        <Ionicons key={i} name={name} size={size} color={colors.primary} />
       ))}
       {count !== undefined ? <Text style={styles.count}>({count})</Text> : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  count: {
-    marginLeft: spacing.xs,
-    fontSize: typography.size.xs,
-    fontFamily: typography.fontFamily.body,
-    color: theme.muted,
-  },
-});
+function makeStyles(
+  theme: Palette,
+  spacing: { xs: number },
+  typography: { fontFamily: Record<string, string>; size: Record<string, number> }
+) {
+  return StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+    count: {
+      marginLeft: spacing.xs,
+      fontSize: typography.size.xs,
+      fontFamily: typography.fontFamily.body,
+      color: theme.muted,
+    },
+  });
+}

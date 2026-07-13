@@ -1,19 +1,15 @@
 import React from 'react';
+import { Pressable, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator, BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
+import {
+  createBottomTabNavigator,
+  BottomTabNavigationOptions,
+  BottomTabBarButtonProps,
+} from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useSession } from '../store/session';
-import { theme } from '../theme/theme';
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
-
-function tabIcon(activeName: IoniconName, inactiveName: IoniconName): BottomTabNavigationOptions['tabBarIcon'] {
-  return ({ focused, color, size }) => (
-    <Ionicons name={focused ? activeName : inactiveName} size={size} color={color} />
-  );
-}
-
+import { useTheme } from '../theme/ThemeContext';
 import { AuthScreen } from '../screens/AuthScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { SearchScreen } from '../screens/SearchScreen';
@@ -26,12 +22,58 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { VendorDashboardScreen } from '../screens/VendorDashboardScreen';
 import { ProviderDashboardScreen } from '../screens/ProviderDashboardScreen';
 
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+function tabIcon(activeName: IoniconName, inactiveName: IoniconName): BottomTabNavigationOptions['tabBarIcon'] {
+  return ({ focused, color, size }) => (
+    <Ionicons name={focused ? activeName : inactiveName} size={size} color={color} />
+  );
+}
+
+// Bouton de tab surélevé (façon FAB), pour l'onglet Panier au centre de la
+// barre — même traitement visuel que le bouton central de la maquette de
+// référence (qui y met "Carte", un écran qu'on n'a pas encore : Phase 4).
+function ElevatedTabButton(props: BottomTabBarButtonProps) {
+  const { colors, shadow } = useTheme();
+  const focused = !!props.accessibilityState?.selected;
+  return (
+    <Pressable
+      onPress={props.onPress}
+      onLongPress={props.onLongPress}
+      accessibilityState={props.accessibilityState}
+      style={[elevatedStyles.button, { backgroundColor: colors.primary }, shadow.lg]}
+    >
+      <Ionicons name={focused ? 'cart' : 'cart-outline'} size={26} color="#fff" />
+    </Pressable>
+  );
+}
+
+const elevatedStyles = StyleSheet.create({
+  button: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginTop: -20,
+  },
+});
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function ClientTabs() {
+  const { colors } = useTheme();
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: theme.primary }}>
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+      }}
+    >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
@@ -45,7 +87,7 @@ function ClientTabs() {
       <Tab.Screen
         name="Cart"
         component={CartScreen}
-        options={{ title: 'Panier', tabBarIcon: tabIcon('cart', 'cart-outline') }}
+        options={{ title: 'Panier', tabBarButton: ElevatedTabButton }}
       />
       <Tab.Screen
         name="Profile"
@@ -57,8 +99,16 @@ function ClientTabs() {
 }
 
 function VendorTabs() {
+  const { colors } = useTheme();
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: theme.primary }}>
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+      }}
+    >
       <Tab.Screen
         name="VendorDashboard"
         component={VendorDashboardScreen}
@@ -74,8 +124,16 @@ function VendorTabs() {
 }
 
 function ProviderTabs() {
+  const { colors } = useTheme();
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: theme.primary }}>
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+      }}
+    >
       <Tab.Screen
         name="ProviderDashboard"
         component={ProviderDashboardScreen}

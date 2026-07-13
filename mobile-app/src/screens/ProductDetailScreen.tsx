@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { theme, typography } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
 import { api } from '../api/client';
 import { useCart } from '../store/cart';
 
 export function ProductDetailScreen() {
+  const { colors, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { productId, shopId } = route.params;
@@ -42,10 +45,12 @@ export function ProductDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 60 },
-  name: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text },
-  price: { fontSize: typography.size.lg - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary, marginTop: 8 },
-  stock: { fontSize: typography.size.sm - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
-  description: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, marginTop: 16, lineHeight: 20 },
-});
+function makeStyles(theme: Palette, typography: { fontFamily: Record<string, string>; size: Record<string, number> }) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 60 },
+    name: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text },
+    price: { fontSize: typography.size.lg - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary, marginTop: 8 },
+    stock: { fontSize: typography.size.sm - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
+    description: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, marginTop: 16, lineHeight: 20 },
+  });
+}

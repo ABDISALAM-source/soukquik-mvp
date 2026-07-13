@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SearchBar } from '../components/SearchBar';
 import { EmptyState } from '../components/EmptyState';
-import { theme, typography } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { Palette } from '../theme/theme';
 import * as catalogApi from '../api/catalog';
 
 export function SearchScreen() {
+  const { colors, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const [query, setQuery] = useState(route.params?.initialQuery || '');
@@ -61,15 +64,17 @@ export function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background },
-  header: { padding: 20, paddingTop: 60 },
-  result: {
-    fontSize: typography.size.md - 1,
-    fontFamily: typography.fontFamily.body,
-    color: theme.text,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-});
+function makeStyles(theme: Palette, typography: { fontFamily: Record<string, string>; size: Record<string, number> }) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background },
+    header: { padding: 20, paddingTop: 60 },
+    result: {
+      fontSize: typography.size.md - 1,
+      fontFamily: typography.fontFamily.body,
+      color: theme.text,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+  });
+}

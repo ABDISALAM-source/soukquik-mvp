@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -7,7 +7,8 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { theme, typography } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { Palette } from '../theme/theme';
 
 interface AvatarProps {
   imageUrl?: string;
@@ -22,6 +23,8 @@ interface AvatarProps {
 }
 
 export function Avatar({ imageUrl, name, size = 56, pulseIntensity = 0 }: AvatarProps) {
+  const { colors, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
   const pulse = useSharedValue(0);
 
   useEffect(() => {
@@ -47,7 +50,7 @@ export function Avatar({ imageUrl, name, size = 56, pulseIntensity = 0 }: Avatar
         <Animated.View
           style={[
             styles.ring,
-            { width: size, height: size, borderRadius: size / 2, borderColor: theme.primary },
+            { width: size, height: size, borderRadius: size / 2, borderColor: colors.primary },
             ringStyle,
           ]}
         />
@@ -72,20 +75,22 @@ export function Avatar({ imageUrl, name, size = 56, pulseIntensity = 0 }: Avatar
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: { alignItems: 'center', justifyContent: 'center' },
-  ring: {
-    position: 'absolute',
-    borderWidth: 2,
-  },
-  circle: { backgroundColor: theme.surface },
-  placeholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.primary + '22',
-  },
-  initial: {
-    fontFamily: typography.fontFamily.headingBold,
-    color: theme.primary,
-  },
-});
+function makeStyles(theme: Palette, typography: { fontFamily: Record<string, string> }) {
+  return StyleSheet.create({
+    wrapper: { alignItems: 'center', justifyContent: 'center' },
+    ring: {
+      position: 'absolute',
+      borderWidth: 2,
+    },
+    circle: { backgroundColor: theme.surface },
+    placeholder: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.primary + '22',
+    },
+    initial: {
+      fontFamily: typography.fontFamily.headingBold,
+      color: theme.primary,
+    },
+  });
+}

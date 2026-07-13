@@ -17,8 +17,19 @@ import Inter_600SemiBold from '@expo-google-fonts/inter/600SemiBold/Inter_600Sem
 // pèse 1.3Mo) alors qu'on n'utilise qu'Ionicons.
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
+
+function AppContent() {
+  const { mode } = useTheme();
+  return (
+    <>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      <RootNavigator />
+    </>
+  );
+}
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -57,8 +68,9 @@ export default function App() {
 
   return (
     <SafeAreaProvider onLayout={onLayoutRootView}>
-      <StatusBar style="dark" />
-      <RootNavigator />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

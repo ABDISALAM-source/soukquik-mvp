@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { theme, typography } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
 import * as catalogApi from '../api/catalog';
 
 export function ServiceScreen() {
+  const { colors, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { serviceId } = route.params;
@@ -32,10 +35,12 @@ export function ServiceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 60 },
-  title: { fontSize: 24, fontFamily: typography.fontFamily.headingBold, color: theme.text },
-  price: { fontSize: typography.size.md, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary, marginTop: 8 },
-  description: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, marginTop: 16, lineHeight: 20 },
-  area: { fontSize: typography.size.sm - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 12 },
-});
+function makeStyles(theme: Palette, typography: { fontFamily: Record<string, string>; size: Record<string, number> }) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 60 },
+    title: { fontSize: 24, fontFamily: typography.fontFamily.headingBold, color: theme.text },
+    price: { fontSize: typography.size.md, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary, marginTop: 8 },
+    description: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, marginTop: 16, lineHeight: 20 },
+    area: { fontSize: typography.size.sm - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 12 },
+  });
+}

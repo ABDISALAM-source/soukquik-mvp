@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
   Easing,
 } from 'react-native-reanimated';
-import { theme, radius } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
 
 interface SkeletonProps {
   width?: number | `${number}%`;
@@ -16,7 +16,9 @@ interface SkeletonProps {
   style?: ViewStyle;
 }
 
-export function Skeleton({ width = '100%', height = 16, borderRadius = radius.sm, style }: SkeletonProps) {
+export function Skeleton({ width = '100%', height = 16, borderRadius, style }: SkeletonProps) {
+  const { colors, radius } = useTheme();
+  const resolvedRadius = borderRadius ?? radius.sm;
   const opacity = useSharedValue(0.4);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export function Skeleton({ width = '100%', height = 16, borderRadius = radius.sm
   return (
     <Animated.View
       style={[
-        { width, height, borderRadius, backgroundColor: theme.border },
+        { width, height, borderRadius: resolvedRadius, backgroundColor: colors.border },
         animatedStyle,
         style,
       ]}
@@ -46,6 +48,7 @@ interface SkeletonCardProps {
 
 /** Rangée de skeletons imitant la mise en page de Card, pour les listes horizontales en chargement. */
 export function SkeletonCardRow({ count = 4 }: SkeletonCardProps) {
+  const { radius } = useTheme();
   return (
     <View style={styles.row}>
       {Array.from({ length: count }).map((_, i) => (

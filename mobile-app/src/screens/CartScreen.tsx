@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Alert, FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { theme, typography, spacing, radius } from '../theme/theme';
+import { useTheme } from '../theme/ThemeContext';
+import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
 import { useCart } from '../store/cart';
 import * as ordersApi from '../api/orders';
 
 export function CartScreen() {
+  const { colors, spacing, radius, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius, typography), [colors, spacing, radius, typography]);
   const navigation = useNavigation<any>();
   const { items, removeItem, clear } = useCart();
   const [address, setAddress] = useState('');
@@ -57,37 +60,44 @@ export function CartScreen() {
         placeholder="Adresse de livraison"
         value={address}
         onChangeText={setAddress}
-        placeholderTextColor={theme.muted}
+        placeholderTextColor={colors.muted}
       />
       <Button label="Commander" onPress={placeOrder} loading={loading} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 60 },
-  title: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: 16 },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border,
-  },
-  itemName: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, flex: 1 },
-  itemPrice: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text, marginRight: 12 },
-  remove: { color: theme.danger, fontSize: typography.size.xs, fontFamily: typography.fontFamily.body },
-  total: { fontSize: typography.size.lg - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text, marginVertical: 16 },
-  input: {
-    backgroundColor: theme.surface,
-    borderWidth: 1,
-    borderColor: theme.border,
-    borderRadius: radius.sm + 4,
-    height: 48,
-    paddingHorizontal: spacing.md - 2,
-    marginBottom: spacing.md,
-    fontFamily: typography.fontFamily.body,
-    color: theme.text,
-  },
-});
+function makeStyles(
+  theme: Palette,
+  spacing: { md: number },
+  radius: { sm: number },
+  typography: { fontFamily: Record<string, string>; size: Record<string, number> }
+) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 60 },
+    title: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: 16 },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+    },
+    itemName: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, flex: 1 },
+    itemPrice: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text, marginRight: 12 },
+    remove: { color: theme.danger, fontSize: typography.size.xs, fontFamily: typography.fontFamily.body },
+    total: { fontSize: typography.size.lg - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text, marginVertical: 16 },
+    input: {
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: radius.sm + 4,
+      height: 48,
+      paddingHorizontal: spacing.md - 2,
+      marginBottom: spacing.md,
+      fontFamily: typography.fontFamily.body,
+      color: theme.text,
+    },
+  });
+}
