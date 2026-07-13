@@ -98,6 +98,11 @@ export async function deactivateService(id: string) {
   await api.delete(`/services/${id}`);
 }
 
+export async function fetchProviderAnalytics() {
+  const res = await api.get('/services/analytics/mine');
+  return res.data.data;
+}
+
 export async function search(params: { q?: string; type?: string; category?: string; sort?: string }) {
   const res = await api.get('/search', { params });
   return res.data.data;

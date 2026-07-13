@@ -33,4 +33,8 @@ export const servicesService = {
     await assertOwner(id, providerId);
     await servicesRepository.softDelete(id);
   },
+
+  analyticsMine(providerId: string) {
+    return servicesRepository.analyticsForProvider(providerId);
+  },
 };

@@ -9,6 +9,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Button } from '../components/Button';
 import { api } from '../api/client';
 import * as ordersApi from '../api/orders';
+import * as catalogApi from '../api/catalog';
 import { useSession } from '../store/session';
 
 export function ProviderDashboardScreen() {
@@ -19,6 +20,7 @@ export function ProviderDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -38,6 +40,11 @@ export function ProviderDashboardScreen() {
           if (cancelled) return;
           const merged = perService.flat().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           setBookings(merged);
+          if (mine.length > 0) {
+            const data = await catalogApi.fetchProviderAnalytics();
+            if (cancelled) return;
+            setAnalytics(data);
+          }
         })
         .finally(() => !cancelled && setLoading(false));
       return () => {
@@ -62,7 +69,7 @@ export function ProviderDashboardScreen() {
     );
   }
 
-  const pendingCount = bookings.filter((b) => b.status === 'pending').length;
+  const pendingCount = analytics?.pendingBookings ?? bookings.filter((b) => b.status === 'pending').length;
 
   return (
     <FlatList
@@ -95,8 +102,9 @@ export function ProviderDashboardScreen() {
 
           <View style={styles.statsRow}>
             <Stat label="En attente" value={pendingCount} styles={styles} />
-            <Stat label="Total réservations" value={bookings.length} styles={styles} />
-            <Stat label="Services actifs" value={services.length} styles={styles} />
+            <Stat label="Revenu du jour" value={`${analytics?.revenueToday ?? 0} DJF`} styles={styles} />
+            <Stat label="Revenu total" value={`${analytics?.revenueTotal ?? 0} DJF`} styles={styles} />
+            <Stat label="Services actifs" value={analytics?.activeServices ?? services.length} styles={styles} />
           </View>
 
           <View style={styles.sectionHeader}>
@@ -144,9 +152,10 @@ function makeStyles(
     content: { padding: 20, paddingTop: 60, paddingBottom: spacing.xxl },
     noService: { flex: 1, backgroundColor: theme.background, padding: 20, paddingTop: 100, gap: spacing.lg },
     title: { fontSize: 20, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: 16 },
-    statsRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
+    statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
     stat: {
-      flex: 1,
+      flexBasis: '47%',
+      flexGrow: 1,
       backgroundColor: theme.surface,
       borderRadius: radius.sm + 4,
       padding: 12,

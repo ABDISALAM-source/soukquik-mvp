@@ -31,4 +31,9 @@ export const servicesController = {
     await servicesService.remove(req.params.id, req.user!.id);
     return ok(res, { deleted: true });
   },
+
+  async analyticsMine(req: Request, res: Response) {
+    const data = await servicesService.analyticsMine(req.user!.id);
+    return ok(res, data);
+  },
 };

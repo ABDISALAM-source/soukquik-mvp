@@ -48,6 +48,7 @@ Toutes les réponses suivent le format :
 | Méthode | Route | Rôle |
 |---|---|---|
 | GET | /services | public (liste + filtres) |
+| GET | /services/analytics/mine | provider — agrégé sur tous ses services : `{totalServices, activeServices, totalBookings, pendingBookings, revenueToday, revenueTotal}` |
 | GET | /services/:id | public |
 | POST | /services | provider |
 | PATCH | /services/:id | provider (owner) |

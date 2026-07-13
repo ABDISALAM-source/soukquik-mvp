@@ -8,6 +8,7 @@ import bookingsRoutesForService from '../bookings/bookings.routesForService';
 const router = Router();
 
 router.get('/', asyncHandler(servicesController.list));
+router.get('/analytics/mine', authGuard, requireRole(['provider']), asyncHandler(servicesController.analyticsMine));
 router.get('/:id', asyncHandler(servicesController.getById));
 router.post('/', authGuard, requireRole(['provider']), asyncHandler(servicesController.create));
 router.patch('/:id', authGuard, requireRole(['provider']), asyncHandler(servicesController.update));
