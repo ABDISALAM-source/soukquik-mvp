@@ -19,6 +19,8 @@ import { Palette } from '../theme/theme';
 import * as catalogApi from '../api/catalog';
 import * as likesApi from '../api/likes';
 import * as notificationsApi from '../api/notifications';
+import * as promotionsApi from '../api/promotions';
+import type { Promotion } from '../api/promotions';
 
 // La table categories stocke des noms d'icônes façon Feather ("zap",
 // "wrench"...) côté seed réel, et on garde aussi des clés françaises pour
@@ -117,6 +119,8 @@ export function HomeScreen() {
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [promoIndex, setPromoIndex] = useState(0);
 
   useEffect(() => {
     Promise.all([
@@ -125,16 +129,43 @@ export function HomeScreen() {
       catalogApi.search({ type: 'product' }),
       catalogApi.fetchCategories(),
       likesApi.fetchMyLikes('product'),
+      promotionsApi.fetchActivePromotions(5).catch(() => []),
     ])
-      .then(([s, sv, searchRes, cats, likedProducts]) => {
+      .then(([s, sv, searchRes, cats, likedProducts, promos]) => {
         setShops(s);
         setServices(sv);
         setProducts(searchRes.products || []);
         setCategories(cats.length ? cats : FALLBACK_CATEGORIES);
         setLikedIds(new Set(likedProducts.map((l) => l.targetId)));
+        setPromotions(promos);
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Rotation automatique entre les promotions actives (le tirage pondéré
+  // par budget se fait déjà côté SQL à chaque fetch ; ici on fait juste
+  // défiler l'ensemble reçu tant que l'écran reste ouvert).
+  useEffect(() => {
+    if (promotions.length <= 1) return;
+    const interval = setInterval(() => {
+      setPromoIndex((i) => (i + 1) % promotions.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [promotions.length]);
+
+  // Impression comptée dès qu'une promotion (ré)devient la bannière affichée
+  // — au montage et à chaque rotation.
+  useEffect(() => {
+    const current = promotions[promoIndex];
+    if (current) promotionsApi.trackImpression(current.id).catch(() => {});
+  }, [promoIndex, promotions]);
+
+  function handlePromoPress(promo: Promotion) {
+    promotionsApi.trackClick(promo.id).catch(() => {});
+    if (promo.targetType === 'shop') navigation.navigate('Shop', { shopId: promo.targetId });
+    else if (promo.targetType === 'service') navigation.navigate('Service', { serviceId: promo.targetId });
+    else navigation.navigate('ProductDetail', { productId: promo.targetId, shopId: promo.targetShopId });
+  }
 
   // Le compteur non-lu doit se rafraîchir à chaque retour sur l'accueil
   // (ex: après avoir lu des notifications ailleurs), pas juste au montage.
@@ -292,15 +323,18 @@ export function HomeScreen() {
         </View>
       )}
 
-      {/* BANNIÈRE SPONSORISÉE */}
-      <View style={styles.sponsoredWrapper}>
-        <SponsoredBanner
-          title="Nouveau ! Collection Luxe"
-          subtitle="Découvrez les montres premium à prix exclusifs"
-          ctaLabel="Découvrir"
-          onPress={notYetAvailable}
-        />
-      </View>
+      {/* BANNIÈRE SPONSORISÉE (promotions réelles, table promotions) */}
+      {promotions.length > 0 && (
+        <View style={styles.sponsoredWrapper}>
+          <SponsoredBanner
+            title={promotions[promoIndex].targetName ?? 'Offre sponsorisée'}
+            subtitle="Boutique et produits mis en avant"
+            ctaLabel="Découvrir"
+            imageUrl={promotions[promoIndex].targetImage}
+            onPress={() => handlePromoPress(promotions[promoIndex])}
+          />
+        </View>
+      )}
 
       {/* FILTRES & DÉCOUVERTE */}
       <View style={styles.filtersWrapper}>

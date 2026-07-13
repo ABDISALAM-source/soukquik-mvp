@@ -116,13 +116,15 @@ Déclenchées en interne par d'autres modules (pas d'endpoint de création publi
 ## Promotions (Phase 1/9 — publicité sponsorisée)
 | Méthode | Route | Rôle |
 |---|---|---|
-| POST | /promotions | vendor/provider — body `{targetType, targetId, budget, startsAt?, endsAt?}`, statut initial `pending` |
+| POST | /promotions | vendor/provider — body `{targetType, targetId, budget, startsAt?, endsAt?}`, statut initial `pending`. Le serveur vérifie que `targetId` appartient bien à l'appelant (403 sinon) |
 | GET | /promotions/mine | vendor/provider (propriétaire) |
 | GET | /promotions/active?limit= | public — actives uniquement, rotation pondérée par budget restant |
-| GET | /promotions | admin — toutes, pour validation |
+| GET | /promotions | admin — toutes, pour validation, avec `ownerName` (nom du vendeur/prestataire) |
 | PATCH | /promotions/:id/status | admin — `pending`/`active`/`expired` |
 | POST | /promotions/:id/impression | public — incrémente le compteur |
 | POST | /promotions/:id/click | public — incrémente le compteur |
+
+Chaque promotion renvoyée (sur toutes les routes `GET`) est enrichie de `targetName`/`targetImage` (repris du nom/logo/visuel de la boutique, du service ou du produit ciblé — les promotions n'ont pas de copie publicitaire propre) et de `targetShopId` (uniquement pour `targetType: 'product'`, utile pour naviguer vers la fiche produit qui exige un `shopId`).
 
 ## Presence (Phase 1/8 — présence boutique, sous-ressource de Shops)
 | Méthode | Route | Rôle |

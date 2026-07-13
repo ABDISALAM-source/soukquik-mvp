@@ -25,6 +25,7 @@ import { FavoritesScreen } from '../screens/FavoritesScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { HistoryScreen } from '../screens/HistoryScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -157,10 +158,36 @@ function ProviderTabs() {
   );
 }
 
+function AdminTabs() {
+  const { colors } = useTheme();
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+      }}
+    >
+      <Tab.Screen
+        name="AdminDashboard"
+        component={AdminDashboardScreen}
+        options={{ title: 'Modération', tabBarIcon: tabIcon('shield-checkmark', 'shield-checkmark-outline') }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Profil', tabBarIcon: tabIcon('person', 'person-outline') }}
+      />
+    </Tab.Navigator>
+  );
+}
+
 function MainStack() {
   const role = useSession((s) => s.user?.role);
 
-  const RoleTabs = role === 'vendor' ? VendorTabs : role === 'provider' ? ProviderTabs : ClientTabs;
+  const RoleTabs =
+    role === 'vendor' ? VendorTabs : role === 'provider' ? ProviderTabs : role === 'admin' ? AdminTabs : ClientTabs;
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
