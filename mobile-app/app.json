@@ -9,10 +9,19 @@
       "backgroundColor": "#FAF7F2"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "SoukQuik utilise ta position pour te montrer les boutiques et prestataires les plus proches de toi."
+      }
     },
     "android": {
-      "package": "com.soukquik.app"
+      "package": "com.soukquik.app",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
+      }
     },
     "extra": {
       "apiUrl": "http://localhost:4000/api",
@@ -23,7 +32,13 @@
     "owner": "khayali",
     "plugins": [
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "SoukQuik utilise ta position pour te montrer les boutiques et prestataires les plus proches de toi."
+        }
+      ]
     ]
   }
 }

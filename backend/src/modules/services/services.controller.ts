@@ -3,12 +3,18 @@ import { ok } from '../../common/response';
 import { Errors } from '../../common/errors';
 import { availabilityService } from '../availability/availability.service';
 import { servicesService } from './services.service';
-import { createServiceSchema, updateServiceSchema } from './services.types';
+import { createServiceSchema, updateServiceSchema, nearbyQuerySchema } from './services.types';
 
 export const servicesController = {
   async list(req: Request, res: Response) {
     const { category, q, sort } = req.query;
     const rows = await servicesService.list({ category: category as string, q: q as string, sort: sort as string });
+    return ok(res, rows);
+  },
+
+  async nearby(req: Request, res: Response) {
+    const { lat, lng, radiusKm, limit } = nearbyQuerySchema.parse(req.query);
+    const rows = await servicesService.nearby(lat, lng, radiusKm, limit);
     return ok(res, rows);
   },
 

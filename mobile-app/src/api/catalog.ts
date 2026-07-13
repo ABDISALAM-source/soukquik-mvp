@@ -15,6 +15,11 @@ export async function fetchShopProducts(shopId: string) {
   return res.data.data;
 }
 
+export async function fetchNearbyShops(lat: number, lng: number, radiusKm?: number, limit?: number) {
+  const res = await api.get('/shops/nearby', { params: { lat, lng, radiusKm, limit } });
+  return res.data.data;
+}
+
 export interface ShopInput {
   name: string;
   description?: string;
@@ -70,6 +75,11 @@ export async function fetchServices(params?: { category?: string; q?: string; so
 
 export async function fetchService(id: string) {
   const res = await api.get(`/services/${id}`);
+  return res.data.data;
+}
+
+export async function fetchNearbyServices(lat: number, lng: number, radiusKm?: number, limit?: number) {
+  const res = await api.get('/services/nearby', { params: { lat, lng, radiusKm, limit } });
   return res.data.data;
 }
 

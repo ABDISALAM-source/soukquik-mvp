@@ -7,6 +7,10 @@ export const shopsService = {
     return shopsRepository.findAll(filters);
   },
 
+  nearby(lat: number, lng: number, radiusKm: number, limit: number) {
+    return shopsRepository.findNearby(lat, lng, radiusKm, limit);
+  },
+
   async getById(id: string) {
     const shop = await shopsRepository.findById(id);
     if (!shop) throw Errors.notFound('Boutique introuvable');

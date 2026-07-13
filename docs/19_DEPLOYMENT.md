@@ -36,6 +36,7 @@ Sur un appareil physique, définir `EXPO_PUBLIC_API_URL=http://<IP-locale>:4000/
 - Variables d'environnement : ne jamais commiter `.env`, utiliser les secrets du provider
 - Redis (queues, cache) et Meilisearch (recherche avancée) : à ajouter comme services supplémentaires dans `docker-compose.yml` quand le besoin se présente (sections commentées prêtes dans le fichier)
 - Mobile : build via `eas build` (Expo Application Services) pour générer les binaires iOS/Android à publier sur les stores
+- **Carte (Phase 4)** : `mobile-app/app.json` a `android.config.googleMaps.apiKey` vide intentionnellement — react-native-maps sur Android a besoin d'une vraie clé Google Maps API pour afficher les tuiles en build EAS/production (iOS utilise Apple Maps nativement, aucune clé requise). Sans clé, l'écran Carte reste fonctionnel en dev mais les tuiles Android ne s'afficheront pas correctement. Renseigner la clé avant le prochain build EAS Android.
 
 ## CI/CD (documenté)
 Un exemple de pipeline GitHub Actions (lint + test + build) est à ajouter dans `.github/workflows/ci.yml` — non inclus dans ce MVP pour rester focalisé sur le code applicatif, mais la commande `npm test` et `npm run build` du backend sont déjà prêtes à être branchées telles quelles.

@@ -13,3 +13,11 @@ export type CreateShopInput = z.infer<typeof createShopSchema>;
 
 export const updateShopSchema = createShopSchema.partial();
 export type UpdateShopInput = z.infer<typeof updateShopSchema>;
+
+export const nearbyQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  radiusKm: z.coerce.number().positive().max(200).optional().default(10),
+  limit: z.coerce.number().int().positive().max(50).optional().default(20),
+});
+export type NearbyQuery = z.infer<typeof nearbyQuerySchema>;

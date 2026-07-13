@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SearchBar } from '../components/SearchBar';
@@ -21,6 +21,10 @@ import * as likesApi from '../api/likes';
 import * as notificationsApi from '../api/notifications';
 import * as promotionsApi from '../api/promotions';
 import type { Promotion } from '../api/promotions';
+import { useLocationStore } from '../store/location';
+import { haversineKm, formatDistanceKm } from '../utils/geo';
+
+const NEARBY_RADIUS_KM = 15;
 
 // La table categories stocke des noms d'icônes façon Feather ("zap",
 // "wrench"...) côté seed réel, et on garde aussi des clés françaises pour
@@ -121,6 +125,64 @@ export function HomeScreen() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [promoIndex, setPromoIndex] = useState(0);
+  const [usingNearby, setUsingNearby] = useState(false);
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+  const coords = useLocationStore((s) => s.coords);
+  const locationStatus = useLocationStore((s) => s.status);
+  const requestLocation = useLocationStore((s) => s.requestLocation);
+
+  // Demande silencieuse au montage (pas d'alerte si refusée ici) : sert
+  // uniquement à peupler la distance réelle sur les cartes produit sans
+  // attendre une action explicite. Le message clair en cas de refus
+  // n'apparaît que quand l'utilisateur cherche activement "Près de moi".
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
+
+  // Déclenche la permission (si jamais demandée) ou prévient clairement
+  // l'utilisateur (si refusée) dès que le filtre "Près de moi" est actif.
+  useEffect(() => {
+    if (filter !== 'nearby') return;
+    if (locationStatus === 'unknown') {
+      requestLocation();
+    } else if (locationStatus === 'denied') {
+      Alert.alert(
+        'Localisation désactivée',
+        "Active la localisation dans les réglages de ton téléphone pour voir les boutiques et prestataires près de toi."
+      );
+    }
+  }, [filter, locationStatus, requestLocation]);
+
+  // Une fois les coordonnées connues et le filtre "Près de moi" actif, on
+  // remplace shops/services par les résultats réels triés par distance
+  // (backend). En quittant le filtre, on revient à la liste générique.
+  useEffect(() => {
+    if (filter === 'nearby' && coords) {
+      setNearbyLoading(true);
+      Promise.all([
+        catalogApi.fetchNearbyShops(coords.latitude, coords.longitude, NEARBY_RADIUS_KM),
+        catalogApi.fetchNearbyServices(coords.latitude, coords.longitude, NEARBY_RADIUS_KM),
+      ])
+        .then(([nearShops, nearServices]) => {
+          setShops(nearShops);
+          setServices(nearServices);
+          setUsingNearby(true);
+        })
+        .finally(() => setNearbyLoading(false));
+    } else if (filter !== 'nearby' && usingNearby) {
+      Promise.all([catalogApi.fetchShops(), catalogApi.fetchServices()]).then(([s, sv]) => {
+        setShops(s);
+        setServices(sv);
+        setUsingNearby(false);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, coords]);
+
+  function productDistanceLabel(item: any): string | undefined {
+    if (!coords || item.shopLatitude == null || item.shopLongitude == null) return undefined;
+    return formatDistanceKm(haversineKm(coords.latitude, coords.longitude, item.shopLatitude, item.shopLongitude));
+  }
 
   useEffect(() => {
     Promise.all([
@@ -259,14 +321,18 @@ export function HomeScreen() {
       </View>
 
       {/* EN CE MOMENT */}
-      {loading ? (
+      {loading || nearbyLoading ? (
         <View style={styles.rowPadding}>
           <SkeletonCardRow />
         </View>
       ) : trendingItems.length > 0 ? (
         <View style={styles.section}>
-          <SectionTitle title="En ce moment" icon="🔥" onSeeAll={notYetAvailable} />
+          <SectionTitle title={filter === 'nearby' ? 'Près de toi' : 'En ce moment'} icon={filter === 'nearby' ? '📍' : '🔥'} onSeeAll={notYetAvailable} />
           <TrendingRow items={trendingItems} />
+        </View>
+      ) : filter === 'nearby' ? (
+        <View style={styles.rowPadding}>
+          <EmptyState message="Rien à proximité pour le moment. Essaie d'élargir ta recherche." />
         </View>
       ) : null}
 
@@ -289,7 +355,7 @@ export function HomeScreen() {
                   title={item.name}
                   brand={item.brand}
                   price={`${item.price} DJF`}
-                  distance={`${(1.2 + index * 0.3).toFixed(1)} km`}
+                  distance={productDistanceLabel(item)}
                   deliveryBadge={`Livraison ${30 + index * 15} min`}
                   imageUrl={item.imageUrl}
                   index={index}
@@ -348,7 +414,7 @@ export function HomeScreen() {
           subtitle={`${shops.length} magasins ouverts`}
           linkLabel="Voir sur la carte"
           layout="map"
-          onPress={notYetAvailable}
+          onPress={() => navigation.navigate('Map')}
         />
         <DiscoveryCard
           icon="flash"

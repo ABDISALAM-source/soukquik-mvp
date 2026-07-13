@@ -10,6 +10,7 @@ import presenceRoutesForShop from '../presence/presence.routesForShop';
 const router = Router();
 
 router.get('/', asyncHandler(shopsController.list));
+router.get('/nearby', asyncHandler(shopsController.nearby));
 router.get('/:id', asyncHandler(shopsController.getById));
 router.post('/', authGuard, requireRole(['vendor']), asyncHandler(shopsController.create));
 router.patch('/:id', authGuard, requireRole(['vendor']), asyncHandler(shopsController.update));

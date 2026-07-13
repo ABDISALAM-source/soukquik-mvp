@@ -14,6 +14,10 @@ export const servicesService = {
     return servicesRepository.findAll(filters);
   },
 
+  nearby(lat: number, lng: number, radiusKm: number, limit: number) {
+    return servicesRepository.findNearby(lat, lng, radiusKm, limit);
+  },
+
   async getById(id: string) {
     const service = await servicesRepository.findById(id);
     if (!service) throw Errors.notFound('Service introuvable');

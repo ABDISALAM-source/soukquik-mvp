@@ -1,4 +1,5 @@
 import { pool } from '../../config/db';
+import { haversineSql } from '../../common/geo';
 
 function mapShop(r: any) {
   return {
@@ -45,6 +46,22 @@ export const shopsRepository = {
   async findRawById(id: string) {
     const { rows } = await pool.query('SELECT * FROM shops WHERE id = $1', [id]);
     return rows[0] || null;
+  },
+
+  async findNearby(lat: number, lng: number, radiusKm: number, limit: number) {
+    const distanceExpr = haversineSql('$1', '$2', 'latitude', 'longitude');
+    const { rows } = await pool.query(
+      `SELECT * FROM (
+         SELECT *, ${distanceExpr} AS distance_km
+         FROM shops
+         WHERE is_active = true AND latitude IS NOT NULL AND longitude IS NOT NULL
+       ) sub
+       WHERE distance_km <= $3
+       ORDER BY distance_km ASC
+       LIMIT $4`,
+      [lat, lng, radiusKm, limit]
+    );
+    return rows.map((r: any) => ({ ...mapShop(r), distanceKm: Number(r.distance_km) }));
   },
 
   async create(ownerId: string, input: any) {

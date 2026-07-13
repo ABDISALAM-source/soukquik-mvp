@@ -30,6 +30,7 @@ Toutes les réponses suivent le format :
 | Méthode | Route | Rôle |
 |---|---|---|
 | GET | /shops | public (liste + filtres) |
+| GET | /shops/nearby?lat=&lng=&radiusKm=&limit= | public — triées par distance croissante, `radiusKm` défaut 10 (max 200), `limit` défaut 20 (max 50). Chaque résultat porte `distanceKm`. |
 | GET | /shops/:id | public |
 | POST | /shops | vendor |
 | PATCH | /shops/:id | vendor (owner) |
@@ -48,6 +49,7 @@ Toutes les réponses suivent le format :
 | Méthode | Route | Rôle |
 |---|---|---|
 | GET | /services | public (liste + filtres) |
+| GET | /services/nearby?lat=&lng=&radiusKm=&limit= | public — triés par distance croissante, plafonnée en plus par la zone d'intervention du prestataire (`LEAST(radiusKm, serviceAreaKm)`). Chaque résultat porte `distanceKm`. |
 | GET | /services/analytics/mine | provider — agrégé sur tous ses services : `{totalServices, activeServices, totalBookings, pendingBookings, revenueToday, revenueTotal}` |
 | GET | /services/:id | public |
 | POST | /services | provider |
@@ -58,6 +60,8 @@ Toutes les réponses suivent le format :
 | Méthode | Route | Rôle |
 |---|---|---|
 | GET | /search?q=&type=&category=&sort= | public |
+
+Depuis la Phase 4, les résultats portent leurs coordonnées pour permettre au client de calculer une distance réelle (le endpoint ne connaît pas la position de l'utilisateur, donc ne calcule pas lui-même de distance ici — contrairement à `/shops/nearby` et `/services/nearby`) : `products[].shopLatitude`/`shopLongitude` (jointure vers la boutique), `services[].latitude`/`longitude`, `shops[].latitude`/`longitude`.
 
 ## Orders
 | Méthode | Route | Rôle |

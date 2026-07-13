@@ -30,6 +30,7 @@ import { CreateShopScreen } from '../screens/CreateShopScreen';
 import { ProductFormScreen } from '../screens/ProductFormScreen';
 import { ServiceFormScreen } from '../screens/ServiceFormScreen';
 import { AvailabilityScreen } from '../screens/AvailabilityScreen';
+import { MapScreen } from '../screens/MapScreen';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -41,7 +42,8 @@ function tabIcon(activeName: IoniconName, inactiveName: IoniconName): BottomTabN
 
 // Bouton de tab surélevé (façon FAB), pour l'onglet Panier au centre de la
 // barre — même traitement visuel que le bouton central de la maquette de
-// référence (qui y met "Carte", un écran qu'on n'a pas encore : Phase 4).
+// référence (qui y met "Carte" ; on a gardé Panier au centre pour ne pas
+// perturber la navigation déjà en place, "Carte" est un onglet normal).
 function ElevatedTabButton(props: BottomTabBarButtonProps) {
   const { colors, shadow } = useTheme();
   const focused = !!props.accessibilityState?.selected;
@@ -92,6 +94,11 @@ function ClientTabs() {
         name="Search"
         component={SearchScreen}
         options={{ title: 'Recherche', tabBarIcon: tabIcon('search', 'search-outline') }}
+      />
+      <Tab.Screen
+        name="Map"
+        component={MapScreen}
+        options={{ title: 'Carte', tabBarIcon: tabIcon('map', 'map-outline') }}
       />
       <Tab.Screen
         name="Cart"

@@ -8,6 +8,7 @@ import bookingsRoutesForService from '../bookings/bookings.routesForService';
 const router = Router();
 
 router.get('/', asyncHandler(servicesController.list));
+router.get('/nearby', asyncHandler(servicesController.nearby));
 router.get('/analytics/mine', authGuard, requireRole(['provider']), asyncHandler(servicesController.analyticsMine));
 router.get('/:id', asyncHandler(servicesController.getById));
 router.get('/:id/availability', asyncHandler(servicesController.availability));

@@ -1,4 +1,5 @@
 import { pool } from '../../config/db';
+import { haversineSql } from '../../common/geo';
 
 function mapService(r: any) {
   return {
@@ -45,6 +46,25 @@ export const servicesRepository = {
   async findById(id: string) {
     const { rows } = await pool.query('SELECT * FROM services WHERE id = $1', [id]);
     return rows[0] || null;
+  },
+
+  // Un prestataire n'est "à proximité" que dans la limite de sa propre
+  // zone d'intervention (service_area_km) en plus du rayon demandé par le
+  // client : LEAST(rayon demandé, zone du prestataire).
+  async findNearby(lat: number, lng: number, radiusKm: number, limit: number) {
+    const distanceExpr = haversineSql('$1', '$2', 'latitude', 'longitude');
+    const { rows } = await pool.query(
+      `SELECT * FROM (
+         SELECT *, ${distanceExpr} AS distance_km
+         FROM services
+         WHERE is_active = true AND latitude IS NOT NULL AND longitude IS NOT NULL
+       ) sub
+       WHERE distance_km <= LEAST($3, COALESCE(service_area_km, $3))
+       ORDER BY distance_km ASC
+       LIMIT $4`,
+      [lat, lng, radiusKm, limit]
+    );
+    return rows.map((r: any) => ({ ...mapService(r), distanceKm: Number(r.distance_km) }));
   },
 
   async create(providerId: string, input: any) {
