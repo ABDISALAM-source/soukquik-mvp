@@ -12,6 +12,9 @@ function mapShop(r: any) {
     longitude: r.longitude,
     address: r.address,
     logoUrl: r.logo_url,
+    patente: r.patente ?? null,
+    slogan: r.slogan ?? null,
+    idDocumentUrl: r.id_document_url ?? null,
     isActive: r.is_active,
     isOpen: r.is_open ?? true,
     createdAt: r.created_at,
@@ -71,9 +74,9 @@ export const shopsRepository = {
 
   async create(ownerId: string, input: any) {
     const { rows } = await pool.query(
-      `INSERT INTO shops (owner_id, name, description, category_id, latitude, longitude, address, logo_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [ownerId, input.name, input.description ?? null, input.categoryId ?? null, input.latitude ?? null, input.longitude ?? null, input.address ?? null, input.logoUrl ?? null]
+      `INSERT INTO shops (owner_id, name, description, category_id, latitude, longitude, address, logo_url, patente, slogan, id_document_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      [ownerId, input.name, input.description ?? null, input.categoryId ?? null, input.latitude ?? null, input.longitude ?? null, input.address ?? null, input.logoUrl ?? null, input.patente ?? null, input.slogan ?? null, input.idDocumentUrl ?? null]
     );
     return mapShop(rows[0]);
   },

@@ -9,6 +9,11 @@ export const createServiceSchema = z.object({
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   serviceAreaKm: z.number().positive().optional(),
+  // Infos pro (Phase 11)
+  logoUrl: z.string().optional(),
+  patente: z.string().optional(),
+  slogan: z.string().optional(),
+  idDocumentUrl: z.string().optional(),
 });
 export type CreateServiceInput = z.infer<typeof createServiceSchema>;
 

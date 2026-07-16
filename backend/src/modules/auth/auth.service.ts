@@ -39,6 +39,7 @@ export const authService = {
       phone: input.phone,
       passwordHash,
       role: input.role,
+      avatarUrl: input.avatarUrl ?? null,
     });
 
     const tokens = signTokens(user);

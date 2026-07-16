@@ -7,7 +7,11 @@ export const createShopSchema = z.object({
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   address: z.string().optional(),
-  logoUrl: z.string().url().optional(),
+  logoUrl: z.string().optional(), // data-URI accepté (pas .url())
+  // Infos pro (Phase 11)
+  patente: z.string().optional(),
+  slogan: z.string().optional(),
+  idDocumentUrl: z.string().optional(),
 });
 export type CreateShopInput = z.infer<typeof createShopSchema>;
 

@@ -13,6 +13,10 @@ function mapService(r: any) {
     latitude: r.latitude,
     longitude: r.longitude,
     serviceAreaKm: r.service_area_km,
+    logoUrl: r.logo_url ?? null,
+    patente: r.patente ?? null,
+    slogan: r.slogan ?? null,
+    idDocumentUrl: r.id_document_url ?? null,
     isActive: r.is_active,
     createdAt: r.created_at,
   };
@@ -69,9 +73,9 @@ export const servicesRepository = {
 
   async create(providerId: string, input: any) {
     const { rows } = await pool.query(
-      `INSERT INTO services (provider_id, title, description, category_id, price, price_unit, latitude, longitude, service_area_km)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [providerId, input.title, input.description ?? null, input.categoryId ?? null, input.price, input.priceUnit ?? 'forfait', input.latitude ?? null, input.longitude ?? null, input.serviceAreaKm ?? 10]
+      `INSERT INTO services (provider_id, title, description, category_id, price, price_unit, latitude, longitude, service_area_km, logo_url, patente, slogan, id_document_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      [providerId, input.title, input.description ?? null, input.categoryId ?? null, input.price, input.priceUnit ?? 'forfait', input.latitude ?? null, input.longitude ?? null, input.serviceAreaKm ?? 10, input.logoUrl ?? null, input.patente ?? null, input.slogan ?? null, input.idDocumentUrl ?? null]
     );
     return mapService(rows[0]);
   },

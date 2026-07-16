@@ -6,6 +6,9 @@ export const registerSchema = z.object({
   phone: z.string().min(6),
   password: z.string().min(6),
   role: z.enum(['client', 'vendor', 'provider']),
+  // Photo de profil optionnelle (data-URI base64) — surtout utile aux
+  // vendeurs/prestataires, facultative pour les clients.
+  avatarUrl: z.string().optional(),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
