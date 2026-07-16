@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
@@ -30,6 +30,9 @@ export function VendorDashboardScreen() {
   const [promoTarget, setPromoTarget] = useState<{ type: 'shop' | 'product'; id: string } | null>(null);
   const [budget, setBudget] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [isStoreOpen, setIsStoreOpen] = useState(true);
+  const [togglingOpen, setTogglingOpen] = useState(false);
+  const listRef = useRef<FlatList>(null);
 
   // useFocusEffect (pas useEffect) : au retour de CreateShopScreen ou
   // ProductFormScreen, ce dashboard doit se recharger pour refléter la
@@ -45,6 +48,7 @@ export function VendorDashboardScreen() {
           const mine = res.data.data.find((s: any) => s.ownerId === user?.id);
           setShop(mine || null);
           if (mine) {
+            setIsStoreOpen(mine.isOpen ?? true);
             const analyticsRes = await api.get(`/shops/${mine.id}/analytics`);
             if (cancelled) return;
             setAnalytics(analyticsRes.data.data);
@@ -73,6 +77,22 @@ export function VendorDashboardScreen() {
     if (!next) return;
     await ordersApi.updateOrderStatus(orderId, next);
     setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: next } : o)));
+  }
+
+  // Bascule ouvert/fermé, persistée côté serveur (optimiste + rollback).
+  async function toggleStoreOpen(value: boolean) {
+    if (!shop) return;
+    setIsStoreOpen(value);
+    setTogglingOpen(true);
+    try {
+      await catalogApi.updateShop(shop.id, { isOpen: value } as any);
+      setShop((s: any) => ({ ...s, isOpen: value }));
+    } catch (err: any) {
+      setIsStoreOpen(!value); // rollback
+      Alert.alert('Erreur', err.message ?? "Impossible de changer l'état de la boutique.");
+    } finally {
+      setTogglingOpen(false);
+    }
   }
 
   async function submitPromotion() {
@@ -106,8 +126,22 @@ export function VendorDashboardScreen() {
     );
   }
 
+  // Commandes à traiter (nécessitent une action du vendeur), les plus
+  // récentes d'abord. C'est ce qui alimente la rangée "Commandes urgentes".
+  const urgentOrders = orders.filter((o) => ['pending', 'accepted', 'preparing'].includes(o.status));
+  // Produits en stock faible (≤ 3), pour les alertes.
+  const lowStock = shopProducts.filter((p) => p.stock <= 3);
+
+  // Libellé + prochaine action du bouton selon le statut courant.
+  const nextActionLabel: Record<string, string> = {
+    pending: 'Accepter',
+    accepted: 'Préparer',
+    preparing: 'Marquer prête',
+  };
+
   return (
     <FlatList
+      ref={listRef}
       style={styles.container}
       contentContainerStyle={styles.content}
       data={orders}
@@ -128,17 +162,103 @@ export function VendorDashboardScreen() {
       ListEmptyComponent={<EmptyState message="Aucune commande pour le moment." />}
       ListHeaderComponent={
         <>
-          <Text style={styles.title}>Dashboard — {shop.name}</Text>
+          {/* HEADER : salutation, revenu du jour, tendance, ouvert/fermé */}
+          <View style={styles.heroHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.greeting}>Bonjour, {shop.name}</Text>
+              <Text style={styles.revenue}>
+                {analytics?.revenueToday ?? 0} <Text style={styles.revenueUnit}>DJF</Text>
+              </Text>
+              {analytics?.revenueTrendPct != null ? (
+                <Text style={[styles.trend, { color: analytics.revenueTrendPct >= 0 ? colors.success : colors.danger }]}>
+                  <Ionicons name={analytics.revenueTrendPct >= 0 ? 'trending-up' : 'trending-down'} size={13} />{' '}
+                  {analytics.revenueTrendPct >= 0 ? '+' : ''}{analytics.revenueTrendPct}% vs hier
+                </Text>
+              ) : (
+                <Text style={styles.trendMuted}>Revenu du jour</Text>
+              )}
+            </View>
+            <View style={styles.statusContainer}>
+              <Text style={[styles.statusText, { color: isStoreOpen ? colors.success : colors.muted }]}>
+                {isStoreOpen ? 'Ouvert' : 'Fermé'}
+              </Text>
+              <Switch
+                value={isStoreOpen}
+                onValueChange={toggleStoreOpen}
+                disabled={togglingOpen}
+                trackColor={{ false: colors.surfaceAlt, true: colors.primary + '80' }}
+                thumbColor={isStoreOpen ? colors.primary : colors.muted}
+              />
+            </View>
+          </View>
 
+          {/* ACTIONS RAPIDES */}
+          <View style={styles.quickActions}>
+            <QuickAction icon="add-circle-outline" tint={colors.primary} label="Ajouter" styles={styles} colors={colors}
+              onPress={() => navigation.navigate('ProductForm', { shopId: shop.id })} />
+            <QuickAction icon="eye-outline" tint={colors.success} label="Ma vitrine" styles={styles} colors={colors}
+              onPress={() => navigation.navigate('Shop', { shopId: shop.id })} />
+            <QuickAction icon="pricetag-outline" tint="#FF9500" label="Promo" styles={styles} colors={colors}
+              onPress={() => listRef.current?.scrollToEnd({ animated: true })} />
+          </View>
+
+          {/* COMMANDES URGENTES (à traiter) */}
+          {urgentOrders.length > 0 && (
+            <View style={styles.blockSection}>
+              <Text style={styles.sectionTitle}>Commandes à traiter</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+                {urgentOrders.map((o) => (
+                  <View key={o.id} style={styles.orderCard}>
+                    <View style={styles.orderCardHeader}>
+                      <Text style={styles.orderCardId}>#{o.id.slice(0, 6).toUpperCase()}</Text>
+                      <StatusBadge status={o.status} />
+                    </View>
+                    <Text style={styles.orderCardAmount}>{o.totalAmount} DJF</Text>
+                    <Text style={styles.orderCardMeta} numberOfLines={1}>
+                      {o.deliveryAddress ? `Livraison · ${o.deliveryAddress}` : 'Retrait en magasin'}
+                    </Text>
+                    {nextActionLabel[o.status] ? (
+                      <Pressable style={styles.orderCardBtn} onPress={() => advanceStatus(o.id, o.status)}>
+                        <Text style={styles.orderCardBtnText}>{nextActionLabel[o.status]}</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* ALERTES DE STOCK */}
+          {lowStock.length > 0 && (
+            <View style={styles.blockSection}>
+              <Text style={styles.sectionTitle}>Alertes de stock</Text>
+              {lowStock.map((p) => (
+                <View key={p.id} style={styles.stockItem}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.stockName}>{p.name}</Text>
+                    <Text style={[styles.stockCount, { color: p.stock === 0 ? colors.danger : '#FF9500' }]}>
+                      {p.stock === 0 ? 'Rupture de stock' : `Il ne reste que ${p.stock} ${p.stock > 1 ? 'unités' : 'unité'}`}
+                    </Text>
+                  </View>
+                  <Pressable onPress={() => navigation.navigate('ProductForm', { shopId: shop.id, productId: p.id })}>
+                    <Ionicons name="add-circle" size={28} color={colors.primary} />
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* STATISTIQUES DÉTAILLÉES (conservées) */}
           {analytics && (
             <>
+              <Text style={styles.sectionTitle}>Statistiques</Text>
               <View style={styles.statsRow}>
                 <Stat label="Commandes du jour" value={analytics.ordersToday} styles={styles} />
-                <Stat label="Revenu du jour" value={`${analytics.revenueToday} DJF`} styles={styles} />
                 <Stat label="Visites (jour)" value={analytics.visitsToday ?? 0} styles={styles} />
                 <Stat label="Visites (7 j)" value={analytics.visits7d ?? 0} styles={styles} />
                 <Stat label="Revenu total" value={`${analytics.revenueTotal} DJF`} styles={styles} />
                 <Stat label="Produits actifs" value={analytics.activeProducts} styles={styles} />
+                <Stat label="Ventes totales" value={shop.salesCount ?? '—'} styles={styles} />
               </View>
               {analytics.series?.length ? <VisitsSparkline series={analytics.series} styles={styles} colors={colors} /> : null}
             </>
@@ -246,6 +366,17 @@ function Stat({ label, value, styles }: { label: string; value: any; styles: any
   );
 }
 
+function QuickAction({ icon, tint, label, onPress, styles, colors }: { icon: any; tint: string; label: string; onPress: () => void; styles: any; colors: any }) {
+  return (
+    <Pressable style={styles.actionBtn} onPress={onPress}>
+      <View style={[styles.iconCircle, { backgroundColor: tint + '1a' }]}>
+        <Ionicons name={icon} size={22} color={tint} />
+      </View>
+      <Text style={styles.actionText}>{label}</Text>
+    </Pressable>
+  );
+}
+
 // Mini-graphe en barres (7 jours de visites), pur RN — pas de lib de charts.
 // La hauteur de chaque barre est proportionnelle au max de la série.
 function VisitsSparkline({ series, styles, colors }: { series: { day: string; count: number }[]; styles: any; colors: any }) {
@@ -275,6 +406,33 @@ function makeStyles(
     container: { flex: 1, backgroundColor: theme.background },
     content: { padding: 20, paddingTop: 60, paddingBottom: spacing.xxl },
     title: { fontSize: 20, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: 16 },
+    // --- Header riche (Phase 10) ---
+    heroHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg + 4 },
+    greeting: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.body, color: theme.muted, marginBottom: 4 },
+    revenue: { fontSize: 32, fontFamily: typography.fontFamily.headingBold, color: theme.text },
+    revenueUnit: { fontSize: 18, color: theme.primary, fontFamily: typography.fontFamily.bodySemiBold },
+    trend: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodySemiBold, marginTop: 4 },
+    trendMuted: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
+    statusContainer: { alignItems: 'center' },
+    statusText: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, marginBottom: 5 },
+    // --- Actions rapides ---
+    quickActions: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.lg + 6 },
+    actionBtn: { alignItems: 'center', justifyContent: 'center', width: '31%', paddingVertical: spacing.md - 2, borderRadius: 16, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border },
+    iconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+    actionText: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text },
+    // --- Blocs (commandes urgentes / stock) ---
+    blockSection: { marginBottom: spacing.lg + 6 },
+    horizontalScroll: { marginHorizontal: -4 },
+    orderCard: { width: 250, borderRadius: 18, padding: spacing.md, marginRight: spacing.sm + 4, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border },
+    orderCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    orderCardId: { fontSize: typography.size.sm + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text },
+    orderCardAmount: { fontSize: typography.size.lg - 2, fontFamily: typography.fontFamily.headingBold, color: theme.primary },
+    orderCardMeta: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 2, marginBottom: spacing.md },
+    orderCardBtn: { paddingVertical: 10, borderRadius: 10, alignItems: 'center', backgroundColor: theme.primary },
+    orderCardBtnText: { color: '#090A0F', fontFamily: typography.fontFamily.bodySemiBold, fontSize: typography.size.sm },
+    stockItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.md, borderRadius: 14, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border, marginBottom: spacing.sm },
+    stockName: { fontSize: typography.size.sm + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text, marginBottom: 3 },
+    stockCount: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodyMedium },
     statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
     stat: {
       flexBasis: '47%',

@@ -13,6 +13,7 @@ function mapShop(r: any) {
     address: r.address,
     logoUrl: r.logo_url,
     isActive: r.is_active,
+    isOpen: r.is_open ?? true,
     createdAt: r.created_at,
   };
 }
@@ -86,9 +87,10 @@ export const shopsRepository = {
         latitude = COALESCE($5, latitude),
         longitude = COALESCE($6, longitude),
         address = COALESCE($7, address),
-        logo_url = COALESCE($8, logo_url)
+        logo_url = COALESCE($8, logo_url),
+        is_open = COALESCE($9, is_open)
        WHERE id = $1 RETURNING *`,
-      [id, input.name ?? null, input.description ?? null, input.categoryId ?? null, input.latitude ?? null, input.longitude ?? null, input.address ?? null, input.logoUrl ?? null]
+      [id, input.name ?? null, input.description ?? null, input.categoryId ?? null, input.latitude ?? null, input.longitude ?? null, input.address ?? null, input.logoUrl ?? null, input.isOpen ?? null]
     );
     return mapShop(rows[0]);
   },
@@ -106,16 +108,23 @@ export const shopsRepository = {
       `SELECT COUNT(*)::int AS total_orders,
               COALESCE(SUM(total_amount),0)::numeric AS revenue_total,
               COUNT(*) FILTER (WHERE created_at::date = now()::date)::int AS orders_today,
-              COALESCE(SUM(total_amount) FILTER (WHERE created_at::date = now()::date AND status != 'cancelled'),0)::numeric AS revenue_today
+              COALESCE(SUM(total_amount) FILTER (WHERE created_at::date = now()::date AND status != 'cancelled'),0)::numeric AS revenue_today,
+              COALESCE(SUM(total_amount) FILTER (WHERE created_at::date = (now() - interval '1 day')::date AND status != 'cancelled'),0)::numeric AS revenue_yesterday
        FROM orders WHERE shop_id = $1`,
       [shopId]
     );
+    const revenueToday = Number(orderRows[0].revenue_today);
+    const revenueYesterday = Number(orderRows[0].revenue_yesterday);
+    // Tendance % vs hier : null si hier = 0 (pas de base de comparaison).
+    const revenueTrendPct = revenueYesterday > 0 ? Math.round(((revenueToday - revenueYesterday) / revenueYesterday) * 100) : null;
     return {
       totalProducts: productRows[0].total,
       activeProducts: productRows[0].active,
       totalOrders: orderRows[0].total_orders,
       revenueTotal: Number(orderRows[0].revenue_total),
-      revenueToday: Number(orderRows[0].revenue_today),
+      revenueToday,
+      revenueYesterday,
+      revenueTrendPct,
       ordersToday: orderRows[0].orders_today,
     };
   },

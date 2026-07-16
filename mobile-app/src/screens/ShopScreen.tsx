@@ -90,6 +90,12 @@ export function ShopScreen() {
               <View style={styles.headerInfo}>
                 <Text style={styles.name}>{shop.name}</Text>
                 {shop.address ? <Text style={styles.address}>{shop.address}</Text> : null}
+                {shop.isOpen === false ? (
+                  <View style={styles.closedBadge}>
+                    <Ionicons name="moon" size={11} color={colors.danger} />
+                    <Text style={styles.closedText}>Fermé actuellement</Text>
+                  </View>
+                ) : null}
               </View>
               <Pressable onPress={toggleLike} style={styles.likeButton} hitSlop={8}>
                 <Ionicons name={likeState.liked ? 'heart' : 'heart-outline'} size={22} color={likeState.liked ? colors.danger : colors.muted} />
@@ -176,6 +182,8 @@ function makeStyles(
     address: { fontSize: typography.size.sm - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 2 },
     likeButton: { alignItems: 'center', gap: 2 },
     likeCount: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, color: theme.muted },
+    closedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 4, backgroundColor: theme.danger + '1a', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+    closedText: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, color: theme.danger },
     description: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, marginTop: spacing.md },
     statsRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
     statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },

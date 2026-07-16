@@ -11,7 +11,10 @@ export const createShopSchema = z.object({
 });
 export type CreateShopInput = z.infer<typeof createShopSchema>;
 
-export const updateShopSchema = createShopSchema.partial();
+export const updateShopSchema = createShopSchema.partial().extend({
+  // Bascule ouvert/fermé depuis le dashboard vendeur (Phase 10).
+  isOpen: z.boolean().optional(),
+});
 export type UpdateShopInput = z.infer<typeof updateShopSchema>;
 
 export const nearbyQuerySchema = z.object({
