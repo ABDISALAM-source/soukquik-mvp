@@ -11,7 +11,7 @@ import { RatingStars } from '../components/RatingStars';
 import { ReviewSection } from '../components/ReviewSection';
 import * as catalogApi from '../api/catalog';
 import * as likesApi from '../api/likes';
-import * as presenceApi from '../api/presence';
+import { usePresence } from '../hooks/usePresence';
 
 export function ShopScreen() {
   const { colors, spacing, radius, typography } = useTheme();
@@ -24,23 +24,19 @@ export function ShopScreen() {
   const [products, setProducts] = useState<any[]>([]);
   const [query, setQuery] = useState('');
 
-  const [presence, setPresence] = useState({ count: 0, intensity: 0 });
   const [likeState, setLikeState] = useState({ liked: false, count: 0 });
   const [reviewSummary, setReviewSummary] = useState({ count: 0, average: 0 });
+
+  // Présence temps réel (Phase 8) : la WebSocket enregistre l'entrée à
+  // l'arrivée et la sortie automatiquement au démontage de l'écran, et
+  // pousse le compteur mis à jour dès qu'un autre visiteur entre/sort.
+  const presence = usePresence(shopId);
 
   useEffect(() => {
     catalogApi.fetchShop(shopId).then(setShop);
     catalogApi.fetchShopProducts(shopId).then(setProducts);
-    presenceApi.fetchShopPresence(shopId).then(setPresence).catch(() => {});
     likesApi.fetchLikeCount('shop', shopId).then((r) => setLikeState((s) => ({ ...s, count: r.count }))).catch(() => {});
     likesApi.fetchMyLike('shop', shopId).then((r) => setLikeState((s) => ({ ...s, liked: r.liked }))).catch(() => {});
-
-    // Présence en direct : signale l'entrée à l'arrivée sur la page, la
-    // sortie au départ — alimente le compteur "X en ce moment" en temps réel.
-    presenceApi.enterShopPresence(shopId).catch(() => {});
-    return () => {
-      presenceApi.leaveShopPresence(shopId).catch(() => {});
-    };
   }, [shopId]);
 
   async function toggleLike() {

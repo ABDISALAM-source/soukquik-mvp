@@ -148,9 +148,18 @@ Chaque promotion renvoyée (sur toutes les routes `GET`) est enrichie de `target
 ## Presence (Phase 1/8 — présence boutique, sous-ressource de Shops)
 | Méthode | Route | Rôle |
 |---|---|---|
-| GET | /shops/:shopId/presence | public — `{count, appWideCount, intensity}` (intensité = ratio présence boutique / utilisateurs actifs, données réelles actuelles ; le flux temps réel complet via WebSocket est la Phase 8) |
-| POST | /shops/:shopId/presence/enter | authentifié |
+| GET | /shops/:shopId/presence | public — `{count, appWideCount, intensity}` (intensité = ratio présence boutique / utilisateurs actifs). Instantané HTTP, utilisé par le Home pour la présence des boutiques listées. |
+| POST | /shops/:shopId/presence/enter | authentifié — enregistrement manuel (conservé, mais le temps réel passe désormais par le WebSocket) |
 | POST | /shops/:shopId/presence/leave | authentifié |
+
+### WebSocket temps réel (Phase 8)
+`wss://<host>/ws/presence?token=<accessToken>&shopId=<uuid>` (même serveur/port/tunnel que l'API HTTP).
+
+- À la connexion : le serveur vérifie le JWT (query `token`), enregistre l'entrée dans la boutique (`shopId`) et diffuse le compteur à jour.
+- Messages reçus par le client : `{type:'presence', shopId, count, appWideCount, intensity}` — à chaque entrée/sortie d'un visiteur de la même boutique.
+- À la fermeture de la socket (démontage d'écran, app fermée, réseau coupé) : **sortie enregistrée automatiquement** — plus de sessions fantômes. Un heartbeat ping/pong (30 s) termine les sockets mortes.
+- Codes de fermeture : `4001` (token/shopId manquant ou invalide), `4002` (impossible de rejoindre la boutique).
+- Côté mobile : hook `usePresence(shopId)` (reconnexion auto avec back-off), utilisé par `ShopScreen` pour le compteur "X en ce moment" live.
 
 ## Codes d'erreur HTTP
 - 400 : validation invalide

@@ -17,6 +17,7 @@ import { NotificationBell } from '../components/NotificationBell';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import * as catalogApi from '../api/catalog';
+import * as presenceApi from '../api/presence';
 import * as likesApi from '../api/likes';
 import * as notificationsApi from '../api/notifications';
 import * as promotionsApi from '../api/promotions';
@@ -127,6 +128,11 @@ export function HomeScreen() {
   const [promoIndex, setPromoIndex] = useState(0);
   const [usingNearby, setUsingNearby] = useState(false);
   const [nearbyLoading, setNearbyLoading] = useState(false);
+  // Présence réelle par boutique (shopId -> {count, intensity}), remplie via
+  // l'endpoint HTTP. On ne compte pas ouvrir une WebSocket par boutique du
+  // Home (trop lourd) — le temps réel live est réservé à ShopScreen. Ici on
+  // affiche un instantané réel plutôt que des valeurs simulées.
+  const [shopPresence, setShopPresence] = useState<Record<string, { count: number; intensity: number }>>({});
   const coords = useLocationStore((s) => s.coords);
   const locationStatus = useLocationStore((s) => s.status);
   const requestLocation = useLocationStore((s) => s.requestLocation);
@@ -256,6 +262,32 @@ export function HomeScreen() {
     }
   }
 
+  // Récupère la présence réelle de chaque boutique affichée (une requête
+  // légère par boutique, en parallèle). Se relance quand la liste de
+  // boutiques change (chargement initial, bascule "Près de moi").
+  useEffect(() => {
+    if (shops.length === 0) return;
+    let cancelled = false;
+    Promise.all(
+      shops.map((s) =>
+        presenceApi
+          .fetchShopPresence(s.id)
+          .then((p) => ({ id: s.id, count: p.count, intensity: p.intensity }))
+          .catch(() => null)
+      )
+    ).then((results) => {
+      if (cancelled) return;
+      const map: Record<string, { count: number; intensity: number }> = {};
+      for (const r of results) {
+        if (r) map[r.id] = { count: r.count, intensity: r.intensity };
+      }
+      setShopPresence(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [shops]);
+
   const showShops = filter === 'all' || filter === 'shops' || filter === 'nearby' || filter === 'fast';
   const showServices = filter === 'all' || filter === 'services';
 
@@ -268,8 +300,10 @@ export function HomeScreen() {
           verified: i % 2 === 0,
           rating: 4.5 + (i % 5) * 0.1,
           likes: 12000 + i * 1000,
-          presenceIntensity: Math.min(0.5 + i * 0.15, 1),
-          presenceCount: 180 + i * 47,
+          // Présence réelle (instantané HTTP) ; undefined tant que non chargée
+          // → l'anneau et le "X en ce moment" ne s'affichent tout simplement pas.
+          presenceIntensity: shopPresence[s.id]?.intensity,
+          presenceCount: shopPresence[s.id]?.count,
           onPress: () => navigation.navigate('Shop', { shopId: s.id }),
         }))
       : []),
@@ -280,8 +314,8 @@ export function HomeScreen() {
           verified: i % 3 === 0,
           rating: 4.3 + (i % 4) * 0.15,
           likes: 400 * (i + 1),
-          presenceIntensity: Math.min(0.2 + i * 0.2, 1),
-          presenceCount: 15 + i * 18,
+          // Les services ne sont pas rattachés à une présence (la présence
+          // est scopée boutique dans ce schéma) : pas de compteur affiché.
           onPress: () => navigation.navigate('Service', { serviceId: sv.id }),
         }))
       : []),
