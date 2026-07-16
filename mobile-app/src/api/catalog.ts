@@ -119,6 +119,31 @@ export async function fetchPriceHint(categoryId: string) {
   return res.data.data as { count: number; min: number | null; median: number | null; max: number | null };
 }
 
+// --- Comparaison multi-boutiques + recherche photo (Phase 10 Lot C) ---
+export interface CompareResult {
+  id: string;
+  name: string;
+  price: number;
+  imageUrl?: string;
+  shopId: string;
+  shopName: string;
+  shopLatitude: number | null;
+  shopLongitude: number | null;
+  brandName: string | null;
+  distanceKm: number | null;
+  similarity?: number;
+}
+
+export async function compareProduct(q: string, opts?: { lat?: number; lng?: number; sort?: 'price' | 'distance' }) {
+  const res = await api.get('/products/compare', { params: { q, lat: opts?.lat, lng: opts?.lng, sort: opts?.sort } });
+  return res.data.data as CompareResult[];
+}
+
+export async function imageSearch(imageBase64: string, opts?: { lat?: number; lng?: number }) {
+  const res = await api.post('/products/image-search', { imageBase64, lat: opts?.lat, lng: opts?.lng });
+  return res.data.data as { matched: boolean; results: CompareResult[] };
+}
+
 export async function deactivateProduct(id: string) {
   await api.delete(`/products/${id}`);
 }

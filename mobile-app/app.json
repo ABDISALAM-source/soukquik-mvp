@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.soukquik.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "SoukQuik utilise ta position pour te montrer les boutiques et prestataires les plus proches de toi."
+        "NSLocationWhenInUseUsageDescription": "SoukQuik utilise ta position pour te montrer les boutiques et prestataires les plus proches de toi.",
+        "NSCameraUsageDescription": "SoukQuik utilise l'appareil photo pour rechercher un article à partir d'une photo.",
+        "NSPhotoLibraryUsageDescription": "SoukQuik accède à tes photos pour rechercher un article à partir d'une image."
       }
     },
     "android": {
@@ -41,6 +43,13 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "SoukQuik utilise ta position pour te montrer les boutiques et prestataires les plus proches de toi."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "SoukQuik utilise l'appareil photo pour rechercher un article à partir d'une photo.",
+          "photosPermission": "SoukQuik accède à tes photos pour rechercher un article à partir d'une image."
         }
       ],
       "expo-web-browser"

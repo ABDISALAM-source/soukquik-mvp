@@ -24,6 +24,7 @@ import * as promotionsApi from '../api/promotions';
 import type { Promotion } from '../api/promotions';
 import { useLocationStore } from '../store/location';
 import { haversineKm, formatDistanceKm } from '../utils/geo';
+import { runPhotoSearch } from '../utils/photoSearch';
 
 const NEARBY_RADIUS_KM = 15;
 
@@ -252,7 +253,28 @@ export function HomeScreen() {
   );
 
   function goSearch() {
-    navigation.navigate('Search', { initialQuery: query });
+    // Recherche d'un article précis -> comparaison multi-boutiques (prix +
+    // distance à travers toutes les boutiques). L'annuaire par catégorie
+    // reste accessible via l'onglet Recherche.
+    if (query.trim()) navigation.navigate('Compare', { query: query.trim() });
+    else navigation.navigate('Search', { initialQuery: query });
+  }
+
+  async function photoSearch(source: 'camera' | 'library') {
+    try {
+      const outcome = await runPhotoSearch(source, coords);
+      if (outcome.cancelled) return;
+      if (!outcome.matched) {
+        Alert.alert(
+          'Aucune correspondance visuelle',
+          "Aucun article du catalogue ne ressemble encore à cette photo. Essaie une recherche par texte."
+        );
+        return;
+      }
+      navigation.navigate('Compare', { imageResults: outcome.results ?? [], title: 'Articles similaires 📸' });
+    } catch (err: any) {
+      Alert.alert('Erreur', err.message ?? 'Recherche par photo indisponible.');
+    }
   }
 
   async function toggleLike(id: string) {
@@ -360,7 +382,7 @@ export function HomeScreen() {
           onChangeText={setQuery}
           onSubmit={goSearch}
           placeholder="Rechercher un article, service..."
-          onPressCamera={notYetAvailable}
+          onPressCamera={() => photoSearch('camera')}
           rightIcon="options-outline"
           onPressRightIcon={notYetAvailable}
         />

@@ -31,6 +31,7 @@ import { ProductFormScreen } from '../screens/ProductFormScreen';
 import { ServiceFormScreen } from '../screens/ServiceFormScreen';
 import { AvailabilityScreen } from '../screens/AvailabilityScreen';
 import { MapScreen } from '../screens/MapScreen';
+import { CompareScreen } from '../screens/CompareScreen';
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -206,6 +207,7 @@ function MainStack() {
       <Stack.Screen name="Shop" component={ShopScreen} />
       <Stack.Screen name="Service" component={ServiceScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="Compare" component={CompareScreen} />
       <Stack.Screen name="Booking" component={BookingScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="History" component={HistoryScreen} />

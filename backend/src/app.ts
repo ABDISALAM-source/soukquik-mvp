@@ -28,7 +28,9 @@ export function createApp() {
 
   app.use(helmet());
   app.use(cors({ origin: env.corsOrigin }));
-  app.use(express.json());
+  // Limite relevée à 6 Mo : la recherche par photo envoie une image
+  // (redimensionnée côté mobile) encodée en base64 dans le corps JSON.
+  app.use(express.json({ limit: '6mb' }));
 
   app.get('/api/health', (_req, res) => {
     res.json({ success: true, data: { status: 'ok' }, error: null });

@@ -1,4 +1,5 @@
 import { pool } from '../../config/db';
+import { haversineSql } from '../../common/geo';
 
 function mapProduct(r: any) {
   return {
@@ -86,6 +87,86 @@ export const productsRepository = {
 
   async decrementStock(id: string, quantity: number) {
     await pool.query('UPDATE products SET stock = stock - $2 WHERE id = $1', [id, quantity]);
+  },
+
+  // Comparaison multi-boutiques par article : tous les produits (actifs)
+  // dont le nom / les tags / la marque correspondent à la requête, à travers
+  // TOUTES les boutiques, avec le nom de la boutique, son prix et sa distance
+  // au client. Triable par prix ou par distance.
+  async compare(q: string, lat: number | null, lng: number | null, sort: 'price' | 'distance', limit: number) {
+    const params: any[] = [`%${q}%`];
+    let distanceSelect = 'NULL::float AS distance_km';
+    let orderBy = 'p.price ASC';
+    if (lat != null && lng != null) {
+      params.push(lat, lng);
+      const expr = haversineSql(`$${params.length - 1}`, `$${params.length}`, 's.latitude', 's.longitude');
+      distanceSelect = `${expr} AS distance_km`;
+      orderBy = sort === 'distance' ? 'distance_km ASC NULLS LAST, p.price ASC' : 'p.price ASC, distance_km ASC NULLS LAST';
+    } else {
+      orderBy = 'p.price ASC';
+    }
+    params.push(limit);
+    const { rows } = await pool.query(
+      `SELECT p.id, p.name, p.price, p.image_url, p.shop_id,
+              s.name AS shop_name, s.latitude AS shop_lat, s.longitude AS shop_lng,
+              b.name AS brand_name,
+              ${distanceSelect}
+       FROM products p
+       JOIN shops s ON s.id = p.shop_id AND s.is_active = true
+       LEFT JOIN brands b ON b.id = p.brand_id
+       WHERE p.is_active = true
+         AND (p.name ILIKE $1 OR b.name ILIKE $1 OR EXISTS (
+           SELECT 1 FROM unnest(p.tags) t WHERE t ILIKE $1
+         ))
+       ORDER BY ${orderBy}
+       LIMIT $${params.length}`,
+      params
+    );
+    return rows.map((r: any) => ({
+      id: r.id,
+      name: r.name,
+      price: Number(r.price),
+      imageUrl: r.image_url,
+      shopId: r.shop_id,
+      shopName: r.shop_name,
+      shopLatitude: r.shop_lat,
+      shopLongitude: r.shop_lng,
+      brandName: r.brand_name ?? null,
+      distanceKm: r.distance_km != null ? Number(r.distance_km) : null,
+    }));
+  },
+
+  // Produits actifs disposant d'une empreinte image, avec infos boutique,
+  // pour la recherche par photo (le classement par similarité se fait en
+  // mémoire côté service via la distance de Hamming).
+  async withImageHash(lat: number | null, lng: number | null) {
+    const distanceSelect = lat != null && lng != null
+      ? `${haversineSql('$1', '$2', 's.latitude', 's.longitude')} AS distance_km`
+      : 'NULL::float AS distance_km';
+    const params = lat != null && lng != null ? [lat, lng] : [];
+    const { rows } = await pool.query(
+      `SELECT p.id, p.name, p.price, p.image_url, p.image_hash, p.shop_id,
+              s.name AS shop_name, s.latitude AS shop_lat, s.longitude AS shop_lng,
+              b.name AS brand_name, ${distanceSelect}
+       FROM products p
+       JOIN shops s ON s.id = p.shop_id AND s.is_active = true
+       LEFT JOIN brands b ON b.id = p.brand_id
+       WHERE p.is_active = true AND p.image_hash IS NOT NULL`,
+      params
+    );
+    return rows.map((r: any) => ({
+      id: r.id,
+      name: r.name,
+      price: Number(r.price),
+      imageUrl: r.image_url,
+      imageHash: r.image_hash as string,
+      shopId: r.shop_id,
+      shopName: r.shop_name,
+      shopLatitude: r.shop_lat,
+      shopLongitude: r.shop_lng,
+      brandName: r.brand_name ?? null,
+      distanceKm: r.distance_km != null ? Number(r.distance_km) : null,
+    }));
   },
 
   // Fourchette de prix observée pour une catégorie (aide le vendeur à situer
