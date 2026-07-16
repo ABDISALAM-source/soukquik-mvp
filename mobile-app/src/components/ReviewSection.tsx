@@ -30,6 +30,10 @@ export function ReviewSection({ targetType, targetId, onSummaryChange }: ReviewS
   const [summary, setSummary] = useState({ count: 0, average: 0 });
   const [newRating, setNewRating] = useState(0);
   const [newComment, setNewComment] = useState('');
+  // Notes détaillées optionnelles (Phase 10) : 0 = non renseignée.
+  const [rQuality, setRQuality] = useState(0);
+  const [rValue, setRValue] = useState(0);
+  const [rPunctuality, setRPunctuality] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -51,9 +55,20 @@ export function ReviewSection({ targetType, targetId, onSummaryChange }: ReviewS
     }
     setSubmitting(true);
     try {
-      await reviewsApi.createReview({ targetType, targetId, rating: newRating, comment: newComment || undefined });
+      await reviewsApi.createReview({
+        targetType,
+        targetId,
+        rating: newRating,
+        comment: newComment || undefined,
+        ratingQuality: rQuality || undefined,
+        ratingValue: rValue || undefined,
+        ratingPunctuality: rPunctuality || undefined,
+      });
       setNewRating(0);
       setNewComment('');
+      setRQuality(0);
+      setRValue(0);
+      setRPunctuality(0);
       refresh();
     } catch (err: any) {
       Alert.alert('Erreur', err.message);
@@ -88,6 +103,22 @@ export function ReviewSection({ targetType, targetId, onSummaryChange }: ReviewS
         <View style={styles.reviewForm}>
           <Text style={styles.reviewFormLabel}>Laisser un avis</Text>
           <RatingStars rating={newRating} size={22} onChange={setNewRating} />
+
+          {/* Notes détaillées (optionnelles) */}
+          <Text style={styles.detailHint}>Détaille ton avis (facultatif)</Text>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Qualité</Text>
+            <RatingStars rating={rQuality} size={16} onChange={setRQuality} />
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Rapport qualité-prix</Text>
+            <RatingStars rating={rValue} size={16} onChange={setRValue} />
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Ponctualité</Text>
+            <RatingStars rating={rPunctuality} size={16} onChange={setRPunctuality} />
+          </View>
+
           <TextInput
             style={styles.reviewInput}
             value={newComment}
@@ -138,6 +169,9 @@ function makeStyles(
     },
     reviewForm: { marginTop: spacing.md, gap: spacing.sm },
     reviewFormLabel: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text },
+    detailHint: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: spacing.xs },
+    detailRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    detailLabel: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.body, color: theme.text },
     reviewInput: {
       backgroundColor: theme.surface,
       borderWidth: 1,

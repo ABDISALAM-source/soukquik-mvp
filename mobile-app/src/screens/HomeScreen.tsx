@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SearchBar } from '../components/SearchBar';
@@ -409,6 +409,20 @@ export function HomeScreen() {
         </View>
       ) : null}
 
+      {/* RÉPERTOIRES : Magasins / Services (annuaires distincts) */}
+      <View style={styles.repertoireRow}>
+        <Pressable style={styles.repertoireCard} onPress={() => navigation.navigate('Browse', { kind: 'shops' })}>
+          <Ionicons name="storefront" size={22} color={colors.primary} />
+          <Text style={styles.repertoireLabel}>Magasins</Text>
+          <Text style={styles.repertoireSub}>Parcourir par rayon</Text>
+        </Pressable>
+        <Pressable style={styles.repertoireCard} onPress={() => navigation.navigate('Browse', { kind: 'services' })}>
+          <Ionicons name="construct" size={22} color={colors.primary} />
+          <Text style={styles.repertoireLabel}>Services</Text>
+          <Text style={styles.repertoireSub}>Parcourir par métier</Text>
+        </Pressable>
+      </View>
+
       {/* TENDANCES DU JOUR */}
       {showShops && (
         <View style={styles.section}>
@@ -558,5 +572,17 @@ function makeStyles(
     sponsoredWrapper: { marginTop: spacing.lg + 10, paddingHorizontal: spacing.lg - 4 },
     filtersWrapper: { marginTop: spacing.lg + 5 },
     discoveryRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg - 4, marginTop: spacing.lg },
+    repertoireRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg - 4, marginTop: spacing.lg + 8 },
+    repertoireCard: {
+      flex: 1,
+      backgroundColor: theme.surface,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: spacing.md,
+      gap: 4,
+    },
+    repertoireLabel: { fontSize: typography.size.md, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginTop: 4 },
+    repertoireSub: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.body, color: theme.muted },
   });
 }

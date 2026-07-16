@@ -9,6 +9,9 @@ function mapReview(r: any) {
     targetId: r.target_id,
     rating: r.rating,
     comment: r.comment,
+    ratingQuality: r.rating_quality ?? null,
+    ratingValue: r.rating_value ?? null,
+    ratingPunctuality: r.rating_punctuality ?? null,
     createdAt: r.created_at,
   };
 }
@@ -22,11 +25,11 @@ export const reviewsRepository = {
     return rows.length > 0;
   },
 
-  async create(authorId: string, input: { targetType: string; targetId: string; rating: number; comment?: string }) {
+  async create(authorId: string, input: { targetType: string; targetId: string; rating: number; comment?: string; ratingQuality?: number; ratingValue?: number; ratingPunctuality?: number }) {
     const { rows } = await pool.query(
-      `INSERT INTO reviews (author_id, target_type, target_id, rating, comment)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [authorId, input.targetType, input.targetId, input.rating, input.comment ?? null]
+      `INSERT INTO reviews (author_id, target_type, target_id, rating, comment, rating_quality, rating_value, rating_punctuality)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [authorId, input.targetType, input.targetId, input.rating, input.comment ?? null, input.ratingQuality ?? null, input.ratingValue ?? null, input.ratingPunctuality ?? null]
     );
     return mapReview({ ...rows[0], author_name: null });
   },

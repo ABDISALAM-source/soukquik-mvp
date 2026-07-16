@@ -24,24 +24,37 @@ Toutes les réponses suivent le format :
 ## Categories
 | Méthode | Route | Rôle |
 |---|---|---|
-| GET | /categories | public |
+| GET | /categories | public — toutes (rétrocompat) |
+| GET | /categories?roots=true | public — catégories racines (1er niveau) |
+| GET | /categories?parentId=X | public — sous-catégories de X (Phase 10) |
+
+## Brands (Phase 10)
+| Méthode | Route | Rôle |
+|---|---|---|
+| GET | /brands?q= | public — autocomplétion préfixe (insensible casse) |
+| POST | /brands | vendor — find-or-create dédupliqué (`Nike/nike/NIKE` → 1) |
 
 ## Shops
 | Méthode | Route | Rôle |
 |---|---|---|
 | GET | /shops | public (liste + filtres) |
 | GET | /shops/nearby?lat=&lng=&radiusKm=&limit= | public — triées par distance croissante, `radiusKm` défaut 10 (max 200), `limit` défaut 20 (max 50). Chaque résultat porte `distanceKm`. |
-| GET | /shops/:id | public |
+| GET | /shops/trending?limit= | public — classement popularité (ventes récentes ×5 + visites 7j). Phase 10. |
+| GET | /shops/:id | public — enrichi `salesCount`/`viewsCount` (Phase 10) |
+| GET | /shops/:id/popular-products?limit= | public — articles les plus vus/vendus de la boutique (Phase 10) |
 | POST | /shops | vendor |
 | PATCH | /shops/:id | vendor (owner) |
 | DELETE | /shops/:id | vendor (owner) |
-| GET | /shops/:id/analytics | vendor (owner) |
+| GET | /shops/:id/analytics | vendor (owner) — inclut `visitsToday`/`visits7d`/`series` (Phase 10) |
 
 ## Products
 | Méthode | Route | Rôle |
 |---|---|---|
 | GET | /shops/:shopId/products | public |
-| POST | /shops/:shopId/products | vendor (owner) |
+| POST | /shops/:shopId/products | vendor (owner) — accepte `brandId`, `tags[]` ; empreinte image (dHash) calculée si `imageUrl` (Phase 10) |
+| GET | /products/price-hint?categoryId= | public — fourchette `{count,min,median,max}` observée dans la catégorie (Phase 10) |
+| GET | /products/compare?q=&lat=&lng=&sort=price\|distance | public — même article à travers toutes les boutiques (prix + distance), triable. Phase 10 C1. |
+| POST | /products/image-search | public — body `{imageBase64,lat?,lng?}`, recherche par photo (dHash local, sans API). Renvoie `{matched, results[]}` avec `similarity`. Phase 10 C2. |
 | PATCH | /products/:id | vendor (owner) |
 | DELETE | /products/:id | vendor (owner) |
 
@@ -50,6 +63,7 @@ Toutes les réponses suivent le format :
 |---|---|---|
 | GET | /services | public (liste + filtres) |
 | GET | /services/nearby?lat=&lng=&radiusKm=&limit= | public — triés par distance croissante, plafonnée en plus par la zone d'intervention du prestataire (`LEAST(radiusKm, serviceAreaKm)`). Chaque résultat porte `distanceKm`. |
+| GET | /services/trending?limit= | public — classement popularité (réservations récentes ×5 + visites 7j). Phase 10. |
 | GET | /services/analytics/mine | provider — agrégé sur tous ses services : `{totalServices, activeServices, totalBookings, pendingBookings, revenueToday, revenueTotal}` |
 | GET | /services/:id | public |
 | POST | /services | provider |
@@ -118,9 +132,16 @@ Limite connue : le modèle ne gère pas les fuseaux horaires — les horaires so
 ## Reviews (Phase 1/3 — avis boutique/service/produit)
 | Méthode | Route | Rôle |
 |---|---|---|
-| POST | /reviews | authentifié — body `{targetType, targetId, rating(1-5), comment?}`, un seul avis par user/cible (409 sinon) |
+| POST | /reviews | authentifié — body `{targetType, targetId, rating(1-5), comment?, ratingQuality?, ratingValue?, ratingPunctuality?}` (notes détaillées optionnelles, Phase 10), un seul avis par user/cible (409 sinon) |
 | GET | /reviews?targetType=&targetId= | public — renvoie `{reviews, summary:{count,average}}` |
 | DELETE | /reviews/:id | authentifié (auteur) |
+
+## Tracking (Phase 10 — analytics vues/visites)
+| Méthode | Route | Rôle |
+|---|---|---|
+| POST | /track/product/:id/view | public — enregistre une vue (dédup 30 min si connecté) |
+| POST | /track/shop/:id/visit | public — enregistre une visite de boutique |
+| POST | /track/service/:id/visit | public — enregistre une visite de fiche service |
 
 ## Notifications (Phase 1/7)
 | Méthode | Route | Rôle |

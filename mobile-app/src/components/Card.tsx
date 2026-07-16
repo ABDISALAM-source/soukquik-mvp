@@ -57,6 +57,15 @@ export function Card({
     opacity: mountProgress.value,
   }));
 
+  // Micro-interaction "cœur qui pulse" au like : petit rebond d'échelle.
+  const heartScale = useSharedValue(1);
+  const heartStyle = useAnimatedStyle(() => ({ transform: [{ scale: heartScale.value }] }));
+  function pulseHeart() {
+    heartScale.value = withTiming(1.4, { duration: 120 }, () => {
+      heartScale.value = withTiming(1, { duration: 140 });
+    });
+  }
+
   return (
     <Pressable
       onPress={onPress}
@@ -81,11 +90,14 @@ export function Card({
               hitSlop={8}
               onPress={(e) => {
                 e.stopPropagation();
+                pulseHeart();
                 onToggleLike?.();
               }}
               style={styles.likeButton}
             >
-              <Ionicons name={liked ? 'heart' : 'heart-outline'} size={16} color={liked ? colors.danger : '#fff'} />
+              <Animated.View style={heartStyle}>
+                <Ionicons name={liked ? 'heart' : 'heart-outline'} size={16} color={liked ? colors.danger : '#fff'} />
+              </Animated.View>
             </Pressable>
           ) : null}
         </View>
