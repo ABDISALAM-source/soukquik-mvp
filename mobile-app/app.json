@@ -3,6 +3,7 @@
     "name": "SoukQuik",
     "slug": "soukquik",
     "version": "0.1.0",
+    "scheme": "soukquik",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {

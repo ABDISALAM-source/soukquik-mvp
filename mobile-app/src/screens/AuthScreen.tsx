@@ -60,23 +60,32 @@ export function AuthScreen() {
   const setSession = useSession((s) => s.setSession);
 
   // --- CONFIGURATION GOOGLE OAUTH ---
+  // Note : seuls les client_id sont nécessaires (clients publics, pas de
+  // client_secret dans une app mobile). Les IDs sont publics par nature.
   const [request, response, promptAsync] = Google.useAuthRequest({
-    // Votre identifiant Android fraîchement généré !
     androidClientId: '315459013363-jgj9juqlun7k0qi6vvk59jl7m9rgl3uj.apps.googleusercontent.com',
-    iosClientId: '', // À remplir plus tard pour la version iPhone
-    // IMPORTANT : Remplacez ceci par l'ID "Application Web" si vous testez sur Expo Go
-    webClientId: 'VOTRE_ID_WEB_ICI.apps.googleusercontent.com', 
+    iosClientId: '', // À remplir quand un client OAuth iOS sera créé
+    // Client « Application Web » (utilisé par Expo Go).
+    webClientId: '315459013363-aj25vof7bfj0br88h33aq4do8k5khvv5.apps.googleusercontent.com',
   });
 
-  // Écoute le retour de Google une fois l'utilisateur connecté
+  // Écoute le retour de Google. IMPORTANT : on réinitialise le spinner pour
+  // TOUS les cas de sortie (succès, erreur, mais aussi annulation/fermeture
+  // 'dismiss'/'cancel'), sinon le bouton tourne à l'infini et fige l'écran.
   useEffect(() => {
-    if (response?.type === 'success') {
-      const { authentication } = response;
-      if (authentication?.accessToken) {
-        handleGoogleLoginToBackend(authentication.accessToken);
+    if (!response) return;
+    if (response.type === 'success') {
+      const token = response.authentication?.accessToken;
+      if (token) {
+        handleGoogleLoginToBackend(token);
+      } else {
+        setGoogleLoading(false);
       }
-    } else if (response?.type === 'error') {
-      Alert.alert("Annulé", "La connexion avec Google a échoué ou a été annulée.");
+    } else {
+      // error / dismiss / cancel / locked...
+      if (response.type === 'error') {
+        Alert.alert('Connexion Google', "La connexion a échoué. Réessaie ou utilise l'email.");
+      }
       setGoogleLoading(false);
     }
   }, [response]);
@@ -95,9 +104,18 @@ export function AuthScreen() {
     }
   }
 
-  const signInWithGoogle = () => {
+  const signInWithGoogle = async () => {
+    if (!request) return;
     setGoogleLoading(true);
-    promptAsync();
+    try {
+      const result = await promptAsync();
+      // Filet de sécurité : si promptAsync se termine sans succès (annulation,
+      // fermeture...), on relâche le spinner ici aussi — l'effet ci-dessus le
+      // fait normalement, mais on ne dépend pas uniquement de lui.
+      if (result?.type !== 'success') setGoogleLoading(false);
+    } catch {
+      setGoogleLoading(false);
+    }
   };
   // ----------------------------------
 
