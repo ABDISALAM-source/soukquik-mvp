@@ -11,7 +11,9 @@ const router = Router();
 
 router.get('/', asyncHandler(shopsController.list));
 router.get('/nearby', asyncHandler(shopsController.nearby));
+router.get('/trending', asyncHandler(shopsController.trending));
 router.get('/:id', asyncHandler(shopsController.getById));
+router.get('/:id/popular-products', asyncHandler(shopsController.popularProducts));
 router.post('/', authGuard, requireRole(['vendor']), asyncHandler(shopsController.create));
 router.patch('/:id', authGuard, requireRole(['vendor']), asyncHandler(shopsController.update));
 router.delete('/:id', authGuard, requireRole(['vendor']), asyncHandler(shopsController.remove));

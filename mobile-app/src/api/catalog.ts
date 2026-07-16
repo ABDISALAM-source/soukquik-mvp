@@ -15,6 +15,33 @@ export async function fetchShopProducts(shopId: string) {
   return res.data.data;
 }
 
+export async function fetchTrendingShops(limit?: number) {
+  const res = await api.get('/shops/trending', { params: { limit } });
+  return res.data.data;
+}
+
+export async function fetchTrendingServices(limit?: number) {
+  const res = await api.get('/services/trending', { params: { limit } });
+  return res.data.data;
+}
+
+export async function fetchShopPopularProducts(shopId: string, limit?: number) {
+  const res = await api.get(`/shops/${shopId}/popular-products`, { params: { limit } });
+  return res.data.data;
+}
+
+// Tracking (Phase 10) — best-effort, on ignore les erreurs (analytics ne doit
+// jamais bloquer l'affichage).
+export async function trackProductView(productId: string) {
+  api.post(`/track/product/${productId}/view`).catch(() => {});
+}
+export async function trackShopVisit(shopId: string) {
+  api.post(`/track/shop/${shopId}/visit`).catch(() => {});
+}
+export async function trackServiceVisit(serviceId: string) {
+  api.post(`/track/service/${serviceId}/visit`).catch(() => {});
+}
+
 export async function fetchNearbyShops(lat: number, lng: number, radiusKm?: number, limit?: number) {
   const res = await api.get('/shops/nearby', { params: { lat, lng, radiusKm, limit } });
   return res.data.data;

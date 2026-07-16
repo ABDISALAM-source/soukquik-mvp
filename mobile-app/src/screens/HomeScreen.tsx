@@ -119,6 +119,10 @@ export function HomeScreen() {
   const [filter, setFilter] = useState('all');
   const [shops, setShops] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
+  // Rangée "En ce moment" : classement réel par popularité (ventes + visites
+  // récentes), distinct des annuaires magasins/services.
+  const [trendingShops, setTrendingShops] = useState<any[]>([]);
+  const [trendingServices, setTrendingServices] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
@@ -198,10 +202,14 @@ export function HomeScreen() {
       catalogApi.fetchCategories(),
       likesApi.fetchMyLikes('product'),
       promotionsApi.fetchActivePromotions(5).catch(() => []),
+      catalogApi.fetchTrendingShops(10).catch(() => []),
+      catalogApi.fetchTrendingServices(10).catch(() => []),
     ])
-      .then(([s, sv, searchRes, cats, likedProducts, promos]) => {
+      .then(([s, sv, searchRes, cats, likedProducts, promos, trShops, trServices]) => {
         setShops(s);
         setServices(sv);
+        setTrendingShops(trShops);
+        setTrendingServices(trServices);
         setProducts(searchRes.products || []);
         setCategories(cats.length ? cats : FALLBACK_CATEGORIES);
         setLikedIds(new Set(likedProducts.map((l) => l.targetId)));
@@ -262,14 +270,17 @@ export function HomeScreen() {
     }
   }
 
-  // Récupère la présence réelle de chaque boutique affichée (une requête
-  // légère par boutique, en parallèle). Se relance quand la liste de
-  // boutiques change (chargement initial, bascule "Près de moi").
+  // Récupère la présence réelle de chaque boutique susceptible d'être
+  // affichée dans la rangée "En ce moment" (union annuaire + trending,
+  // dédupliquée). Une requête légère par boutique, en parallèle.
   useEffect(() => {
-    if (shops.length === 0) return;
+    const byId = new Map<string, any>();
+    for (const s of [...trendingShops, ...shops]) byId.set(s.id, s);
+    const list = Array.from(byId.values());
+    if (list.length === 0) return;
     let cancelled = false;
     Promise.all(
-      shops.map((s) =>
+      list.map((s) =>
         presenceApi
           .fetchShopPresence(s.id)
           .then((p) => ({ id: s.id, count: p.count, intensity: p.intensity }))
@@ -286,14 +297,20 @@ export function HomeScreen() {
     return () => {
       cancelled = true;
     };
-  }, [shops]);
+  }, [shops, trendingShops]);
 
   const showShops = filter === 'all' || filter === 'shops' || filter === 'nearby' || filter === 'fast';
   const showServices = filter === 'all' || filter === 'services';
 
+  // Rangée "En ce moment" = classement réel par popularité (backend), avec
+  // présence live superposée. En mode "Près de moi", on montre plutôt les
+  // boutiques proches (déjà triées par distance dans `shops`).
+  const rowShops = filter === 'nearby' ? shops : trendingShops;
+  const rowServices = filter === 'nearby' ? services : trendingServices;
+
   const trendingItems: TrendingItem[] = [
     ...(showShops
-      ? shops.map((s, i) => ({
+      ? rowShops.map((s, i) => ({
           id: `shop-${s.id}`,
           name: s.name,
           imageUrl: s.logoUrl,
@@ -308,7 +325,7 @@ export function HomeScreen() {
         }))
       : []),
     ...(showServices
-      ? services.map((sv, i) => ({
+      ? rowServices.map((sv, i) => ({
           id: `service-${sv.id}`,
           name: sv.title,
           verified: i % 3 === 0,

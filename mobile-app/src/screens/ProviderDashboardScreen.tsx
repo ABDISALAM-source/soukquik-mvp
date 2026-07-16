@@ -103,6 +103,8 @@ export function ProviderDashboardScreen() {
           <View style={styles.statsRow}>
             <Stat label="En attente" value={pendingCount} styles={styles} />
             <Stat label="Revenu du jour" value={`${analytics?.revenueToday ?? 0} DJF`} styles={styles} />
+            <Stat label="Vues fiche (jour)" value={analytics?.visitsToday ?? 0} styles={styles} />
+            <Stat label="Vues fiche (7 j)" value={analytics?.visits7d ?? 0} styles={styles} />
             <Stat label="Revenu total" value={`${analytics?.revenueTotal ?? 0} DJF`} styles={styles} />
             <Stat label="Services actifs" value={analytics?.activeServices ?? services.length} styles={styles} />
           </View>

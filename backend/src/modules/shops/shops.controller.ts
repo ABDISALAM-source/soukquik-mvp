@@ -16,6 +16,18 @@ export const shopsController = {
     return ok(res, rows);
   },
 
+  async trending(req: Request, res: Response) {
+    const limit = req.query.limit ? Math.min(Number(req.query.limit), 30) : 10;
+    const rows = await shopsService.trending(limit);
+    return ok(res, rows);
+  },
+
+  async popularProducts(req: Request, res: Response) {
+    const limit = req.query.limit ? Math.min(Number(req.query.limit), 20) : 8;
+    const rows = await shopsService.popularProducts(req.params.id, limit);
+    return ok(res, rows);
+  },
+
   async getById(req: Request, res: Response) {
     const shop = await shopsService.getById(req.params.id);
     return ok(res, shop);

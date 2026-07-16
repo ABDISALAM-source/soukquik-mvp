@@ -18,6 +18,9 @@ export function ServiceScreen() {
 
   useEffect(() => {
     catalogApi.fetchService(serviceId).then(setService);
+    // Enregistre une visite de fiche service (Phase 10) — alimente les stats
+    // "vues de la fiche" du dashboard prestataire.
+    catalogApi.trackServiceVisit(serviceId);
   }, [serviceId]);
 
   if (!service) return <EmptyState message="Chargement..." />;

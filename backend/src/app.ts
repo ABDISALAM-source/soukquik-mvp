@@ -20,6 +20,7 @@ import reviewsRoutes from './modules/reviews/reviews.routes';
 import notificationsRoutes from './modules/notifications/notifications.routes';
 import promotionsRoutes from './modules/promotions/promotions.routes';
 import availabilityRoutes from './modules/availability/availability.routes';
+import analyticsRoutes from './modules/analytics/analytics.routes';
 
 export function createApp() {
   const app = express();
@@ -48,6 +49,7 @@ export function createApp() {
   app.use('/api/notifications', notificationsRoutes);
   app.use('/api/promotions', promotionsRoutes);
   app.use('/api/availability', availabilityRoutes);
+  app.use('/api/track', analyticsRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({ success: false, data: null, error: 'Route introuvable' });

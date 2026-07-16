@@ -6,6 +6,7 @@ import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
 import { api } from '../api/client';
+import * as catalogApi from '../api/catalog';
 import { useCart } from '../store/cart';
 
 export function ProductDetailScreen() {
@@ -19,6 +20,8 @@ export function ProductDetailScreen() {
 
   useEffect(() => {
     api.get(`/products/${productId}`).then((res) => setProduct(res.data.data));
+    // Enregistre une vue produit (Phase 10) — alimente "les plus vus".
+    catalogApi.trackProductView(productId);
   }, [productId]);
 
   if (!product) return <EmptyState message="Chargement..." />;

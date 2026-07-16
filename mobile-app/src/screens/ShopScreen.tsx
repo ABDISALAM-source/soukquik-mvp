@@ -22,6 +22,7 @@ export function ShopScreen() {
 
   const [shop, setShop] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
+  const [popularProducts, setPopularProducts] = useState<any[]>([]);
   const [query, setQuery] = useState('');
 
   const [likeState, setLikeState] = useState({ liked: false, count: 0 });
@@ -35,8 +36,12 @@ export function ShopScreen() {
   useEffect(() => {
     catalogApi.fetchShop(shopId).then(setShop);
     catalogApi.fetchShopProducts(shopId).then(setProducts);
+    catalogApi.fetchShopPopularProducts(shopId, 8).then(setPopularProducts).catch(() => {});
     likesApi.fetchLikeCount('shop', shopId).then((r) => setLikeState((s) => ({ ...s, count: r.count }))).catch(() => {});
     likesApi.fetchMyLike('shop', shopId).then((r) => setLikeState((s) => ({ ...s, liked: r.liked }))).catch(() => {});
+    // Enregistre une visite de la boutique (Phase 10) — alimente le
+    // classement "les plus visités" et les stats du dashboard vendeur.
+    catalogApi.trackShopVisit(shopId);
   }, [shopId]);
 
   async function toggleLike() {
@@ -101,10 +106,38 @@ export function ShopScreen() {
                 <Text style={styles.statText}>{presence.count} en ce moment</Text>
               </View>
               <View style={styles.statItem}>
+                <Ionicons name="bag-check" size={14} color={colors.primary} />
+                <Text style={styles.statText}>{shop.salesCount ?? 0} ventes</Text>
+              </View>
+              <View style={styles.statItem}>
                 <RatingStars rating={reviewSummary.average} count={reviewSummary.count} size={13} />
               </View>
             </View>
           </View>
+
+          {/* LES PLUS VUS / VENDUS DE CETTE BOUTIQUE */}
+          {popularProducts.length > 0 && !query ? (
+            <>
+              <Text style={styles.sectionTitle}>Les plus vus & vendus ici 🔥</Text>
+              <FlatList
+                horizontal
+                data={popularProducts}
+                keyExtractor={(item) => `pop-${item.id}`}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.popularRow}
+                renderItem={({ item }) => (
+                  <View style={styles.popularCard}>
+                    <Card
+                      title={item.name}
+                      price={`${item.price} DJF`}
+                      imageUrl={item.imageUrl}
+                      onPress={() => navigation.navigate('ProductDetail', { productId: item.id, shopId })}
+                    />
+                  </View>
+                )}
+              />
+            </>
+          ) : null}
 
           {/* RECHERCHE SCOPÉE */}
           <View style={styles.searchWrapper}>
@@ -118,7 +151,7 @@ export function ShopScreen() {
             />
           </View>
 
-          <Text style={styles.sectionTitle}>Produits</Text>
+          <Text style={styles.sectionTitle}>Tous les produits</Text>
         </>
       }
       ListFooterComponent={
@@ -174,5 +207,7 @@ function makeStyles(
       marginBottom: 12,
     },
     gridItem: { width: '50%', marginBottom: 12 },
+    popularRow: { paddingLeft: 12, paddingRight: 4, paddingBottom: 8 },
+    popularCard: { marginRight: 4 },
   });
 }

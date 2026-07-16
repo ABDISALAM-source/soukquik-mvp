@@ -18,6 +18,12 @@ export const servicesController = {
     return ok(res, rows);
   },
 
+  async trending(req: Request, res: Response) {
+    const limit = req.query.limit ? Math.min(Number(req.query.limit), 30) : 10;
+    const rows = await servicesService.trending(limit);
+    return ok(res, rows);
+  },
+
   async getById(req: Request, res: Response) {
     const service = await servicesService.getById(req.params.id);
     return ok(res, service);

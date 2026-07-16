@@ -131,12 +131,17 @@ export function VendorDashboardScreen() {
           <Text style={styles.title}>Dashboard — {shop.name}</Text>
 
           {analytics && (
-            <View style={styles.statsRow}>
-              <Stat label="Commandes du jour" value={analytics.ordersToday} styles={styles} />
-              <Stat label="Revenu du jour" value={`${analytics.revenueToday} DJF`} styles={styles} />
-              <Stat label="Revenu total" value={`${analytics.revenueTotal} DJF`} styles={styles} />
-              <Stat label="Produits actifs" value={analytics.activeProducts} styles={styles} />
-            </View>
+            <>
+              <View style={styles.statsRow}>
+                <Stat label="Commandes du jour" value={analytics.ordersToday} styles={styles} />
+                <Stat label="Revenu du jour" value={`${analytics.revenueToday} DJF`} styles={styles} />
+                <Stat label="Visites (jour)" value={analytics.visitsToday ?? 0} styles={styles} />
+                <Stat label="Visites (7 j)" value={analytics.visits7d ?? 0} styles={styles} />
+                <Stat label="Revenu total" value={`${analytics.revenueTotal} DJF`} styles={styles} />
+                <Stat label="Produits actifs" value={analytics.activeProducts} styles={styles} />
+              </View>
+              {analytics.series?.length ? <VisitsSparkline series={analytics.series} styles={styles} colors={colors} /> : null}
+            </>
           )}
 
           <View style={styles.sectionHeader}>
@@ -241,6 +246,25 @@ function Stat({ label, value, styles }: { label: string; value: any; styles: any
   );
 }
 
+// Mini-graphe en barres (7 jours de visites), pur RN — pas de lib de charts.
+// La hauteur de chaque barre est proportionnelle au max de la série.
+function VisitsSparkline({ series, styles, colors }: { series: { day: string; count: number }[]; styles: any; colors: any }) {
+  const max = Math.max(1, ...series.map((s) => s.count));
+  return (
+    <View style={styles.sparkCard}>
+      <Text style={styles.sparkTitle}>Visites — 7 derniers jours</Text>
+      <View style={styles.sparkBars}>
+        {series.map((s) => (
+          <View key={s.day} style={styles.sparkCol}>
+            <View style={[styles.sparkBar, { height: 6 + (s.count / max) * 46, backgroundColor: colors.primary }]} />
+            <Text style={styles.sparkDay}>{new Date(s.day).toLocaleDateString(undefined, { weekday: 'narrow' })}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 function makeStyles(
   theme: Palette,
   spacing: { xs: number; sm: number; md: number; lg: number; xxl: number },
@@ -263,6 +287,19 @@ function makeStyles(
     },
     statValue: { fontSize: typography.size.lg - 2, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary },
     statLabel: { fontSize: typography.size.xs - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
+    sparkCard: {
+      backgroundColor: theme.surface,
+      borderRadius: radius.sm + 4,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: 14,
+      marginBottom: 24,
+    },
+    sparkTitle: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.muted, marginBottom: 10 },
+    sparkBars: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 64 },
+    sparkCol: { alignItems: 'center', flex: 1 },
+    sparkBar: { width: 14, borderRadius: 4 },
+    sparkDay: { fontSize: 9, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
     sectionTitle: { fontSize: typography.size.md, fontFamily: typography.fontFamily.heading, color: theme.text, marginBottom: 12 },
     orderRow: {
       flexDirection: 'row',

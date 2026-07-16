@@ -18,6 +18,10 @@ function mapShop(r: any) {
 }
 
 export const shopsRepository = {
+  // Expose le mapping public (snake_case -> camelCase) pour les modules qui
+  // récupèrent des lignes shops via une requête ad hoc (ex: classements).
+  mapPublic: mapShop,
+
   async findAll(filters: { category?: string; q?: string }) {
     const conditions: string[] = ['is_active = true'];
     const params: any[] = [];
