@@ -6,6 +6,7 @@ import { productsController } from './products.controller';
 
 const router = Router();
 
+router.get('/price-hint', asyncHandler(productsController.priceHint));
 router.get('/:id', asyncHandler(productsController.getById));
 router.patch('/:id', authGuard, requireRole(['vendor']), asyncHandler(productsController.update));
 router.delete('/:id', authGuard, requireRole(['vendor']), asyncHandler(productsController.remove));

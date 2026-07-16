@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
-import { FilterChips } from '../components/FilterChips';
 import { EmptyState } from '../components/EmptyState';
 import * as catalogApi from '../api/catalog';
 
@@ -20,15 +19,29 @@ export function ProductFormScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [stock, setStock] = useState('0');
+  const [stock, setStock] = useState('1');
   const [imageUrl, setImageUrl] = useState('');
-  const [categories, setCategories] = useState<any[]>([]);
-  const [categoryId, setCategoryId] = useState('');
+  const [tagsText, setTagsText] = useState('');
+
+  // Cascade catégorie -> sous-catégorie
+  const [rootCategories, setRootCategories] = useState<any[]>([]);
+  const [rootId, setRootId] = useState('');
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [subId, setSubId] = useState('');
+
+  // Marque (autocomplétion + création à la volée)
+  const [brandQuery, setBrandQuery] = useState('');
+  const [brandId, setBrandId] = useState('');
+  const [brandSuggestions, setBrandSuggestions] = useState<{ id: string; name: string }[]>([]);
+
+  // Indice de prix (fourchette de la catégorie)
+  const [priceHint, setPriceHint] = useState<{ count: number; min: number | null; median: number | null; max: number | null } | null>(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
 
   useEffect(() => {
-    catalogApi.fetchCategories().then(setCategories).catch(() => {});
+    catalogApi.fetchRootCategories().then(setRootCategories).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -41,10 +54,59 @@ export function ProductFormScreen() {
         setPrice(String(p.price));
         setStock(String(p.stock));
         setImageUrl(p.imageUrl || '');
-        setCategoryId(p.categoryId || '');
+        setTagsText((p.tags || []).join(', '));
+        if (p.brandId) setBrandId(p.brandId);
+        // On repositionne au moins la sélection de catégorie de tête si elle
+        // correspond à une racine (le pré-remplissage fin de la sous-catégorie
+        // se fait à l'ouverture si l'utilisateur re-parcourt).
+        if (p.categoryId) setSubId(p.categoryId);
       })
       .finally(() => setLoading(false));
   }, [isEditing, productId]);
+
+  // Charge les sous-catégories quand une catégorie racine est choisie.
+  useEffect(() => {
+    if (!rootId) {
+      setSubcategories([]);
+      return;
+    }
+    catalogApi.fetchSubcategories(rootId).then(setSubcategories).catch(() => setSubcategories([]));
+  }, [rootId]);
+
+  // La catégorie effective du produit = sous-catégorie si choisie, sinon racine.
+  const effectiveCategoryId = subId || rootId;
+
+  // Indice de prix : recalculé quand la catégorie effective change.
+  useEffect(() => {
+    if (!effectiveCategoryId) {
+      setPriceHint(null);
+      return;
+    }
+    catalogApi.fetchPriceHint(effectiveCategoryId).then(setPriceHint).catch(() => setPriceHint(null));
+  }, [effectiveCategoryId]);
+
+  // Autocomplétion marque (déclenchée à la frappe).
+  useEffect(() => {
+    const q = brandQuery.trim();
+    if (q.length < 1) {
+      setBrandSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(() => {
+      catalogApi.searchBrands(q).then((r) => !cancelled && setBrandSuggestions(r)).catch(() => {});
+    }, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [brandQuery]);
+
+  function pickBrand(b: { id: string; name: string }) {
+    setBrandId(b.id);
+    setBrandQuery(b.name);
+    setBrandSuggestions([]);
+  }
 
   async function submit() {
     const priceNum = Number(price);
@@ -55,13 +117,27 @@ export function ProductFormScreen() {
     }
     setSubmitting(true);
     try {
+      // Résout la marque : si un nom est tapé sans id sélectionné, on la
+      // crée/retrouve (dédup insensible à la casse côté serveur).
+      let resolvedBrandId = brandId || undefined;
+      const typedBrand = brandQuery.trim();
+      if (typedBrand && !resolvedBrandId) {
+        const brand = await catalogApi.findOrCreateBrand(typedBrand);
+        resolvedBrandId = brand.id;
+      }
+      const tags = tagsText
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
       const input = {
         name: name.trim(),
         description: description.trim() || undefined,
         price: priceNum,
         stock: Number.isFinite(stockNum) ? stockNum : 0,
         imageUrl: imageUrl.trim() || undefined,
-        categoryId: categoryId || undefined,
+        categoryId: effectiveCategoryId || undefined,
+        brandId: resolvedBrandId,
+        tags: tags.length ? tags : undefined,
       };
       if (isEditing) {
         await catalogApi.updateProduct(productId, input);
@@ -101,15 +177,88 @@ export function ProductFormScreen() {
 
   if (loading) return <EmptyState message="Chargement..." />;
 
-  const categoryOptions = [{ value: '', label: 'Aucune' }, ...categories.map((c) => ({ value: c.id, label: c.name }))];
-
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.title}>{isEditing ? 'Modifier le produit' : 'Ajouter un produit'}</Text>
 
-      <Text style={styles.label}>Nom</Text>
+      {/* 1. CATÉGORIE */}
+      <Text style={styles.step}>1 · Catégorie</Text>
+      <View style={styles.chipWrap}>
+        {rootCategories.map((c) => (
+          <Pressable
+            key={c.id}
+            onPress={() => {
+              setRootId(c.id);
+              setSubId('');
+            }}
+            style={[styles.chip, rootId === c.id && styles.chipActive]}
+          >
+            <Text style={[styles.chipText, rootId === c.id && styles.chipTextActive]}>{c.name}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* 2. SOUS-CATÉGORIE (si la catégorie en a) */}
+      {subcategories.length > 0 && (
+        <>
+          <Text style={styles.step}>2 · Précise (sous-catégorie)</Text>
+          <View style={styles.chipWrap}>
+            {subcategories.map((c) => (
+              <Pressable key={c.id} onPress={() => setSubId(c.id)} style={[styles.chip, subId === c.id && styles.chipActive]}>
+                <Text style={[styles.chipText, subId === c.id && styles.chipTextActive]}>{c.name}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      )}
+
+      {/* 3. MARQUE (autocomplétion + création) */}
+      <Text style={styles.step}>{subcategories.length > 0 ? '3' : '2'} · Marque</Text>
+      <TextInput
+        style={styles.input}
+        value={brandQuery}
+        onChangeText={(t) => {
+          setBrandQuery(t);
+          setBrandId(''); // toute frappe annule la sélection précédente
+        }}
+        placeholder="Ex: Nike, Samsung..."
+        placeholderTextColor={colors.muted}
+        autoCapitalize="words"
+      />
+      {brandSuggestions.length > 0 && (
+        <View style={styles.suggestBox}>
+          {brandSuggestions.map((b) => (
+            <Pressable key={b.id} onPress={() => pickBrand(b)} style={styles.suggestItem}>
+              <Text style={styles.suggestText}>{b.name}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+
+      {/* 4. NOM */}
+      <Text style={styles.step}>{subcategories.length > 0 ? '4' : '3'} · Nom de l'article</Text>
       <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nom du produit" placeholderTextColor={colors.muted} />
 
+      {/* 5. PRIX + STOCK */}
+      <Text style={styles.step}>{subcategories.length > 0 ? '5' : '4'} · Prix & stock</Text>
+      {priceHint && priceHint.count > 0 && priceHint.median != null && (
+        <Text style={styles.hint}>
+          💡 Dans cette catégorie : {priceHint.min}–{priceHint.max} DJF (médiane {priceHint.median})
+        </Text>
+      )}
+      <View style={styles.row}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.label}>Prix (DJF)</Text>
+          <TextInput style={styles.input} value={price} onChangeText={setPrice} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.muted} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.label}>Exemplaires en stock</Text>
+          <TextInput style={styles.input} value={stock} onChangeText={setStock} keyboardType="numeric" placeholder="1" placeholderTextColor={colors.muted} />
+        </View>
+      </View>
+
+      {/* 6. DÉTAILS */}
+      <Text style={styles.step}>{subcategories.length > 0 ? '6' : '5'} · Détails</Text>
       <Text style={styles.label}>Description</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
@@ -119,18 +268,14 @@ export function ProductFormScreen() {
         placeholderTextColor={colors.muted}
         multiline
       />
-
-      <View style={styles.row}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Prix (DJF)</Text>
-          <TextInput style={styles.input} value={price} onChangeText={setPrice} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.muted} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Stock</Text>
-          <TextInput style={styles.input} value={stock} onChangeText={setStock} keyboardType="numeric" placeholder="0" placeholderTextColor={colors.muted} />
-        </View>
-      </View>
-
+      <Text style={styles.label}>Tags (couleur, taille, matière…) séparés par des virgules</Text>
+      <TextInput
+        style={styles.input}
+        value={tagsText}
+        onChangeText={setTagsText}
+        placeholder="rouge, XL, coton"
+        placeholderTextColor={colors.muted}
+      />
       <Text style={styles.label}>Image (URL)</Text>
       <TextInput
         style={styles.input}
@@ -140,11 +285,6 @@ export function ProductFormScreen() {
         autoCapitalize="none"
         placeholderTextColor={colors.muted}
       />
-
-      <Text style={styles.label}>Catégorie</Text>
-      <View style={{ marginHorizontal: -(spacing.lg - 4) }}>
-        <FilterChips options={categoryOptions} value={categoryId} onChange={setCategoryId} />
-      </View>
 
       <View style={{ marginTop: spacing.lg }}>
         <Button label={isEditing ? 'Enregistrer' : 'Ajouter le produit'} onPress={submit} loading={submitting} />
@@ -162,19 +302,32 @@ export function ProductFormScreen() {
 function makeStyles(
   theme: Palette,
   spacing: { xs: number; sm: number; md: number; lg: number },
-  radius: { sm: number },
+  radius: { sm: number; pill: number },
   typography: { fontFamily: Record<string, string>; size: Record<string, number> }
 ) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
     content: { padding: spacing.lg - 4, paddingTop: 60, paddingBottom: spacing.lg + 20 },
-    title: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: spacing.lg },
+    title: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: spacing.md },
+    step: {
+      fontSize: typography.size.sm + 1,
+      fontFamily: typography.fontFamily.bodySemiBold,
+      color: theme.primary,
+      marginTop: spacing.lg,
+      marginBottom: spacing.sm,
+    },
     label: {
       fontSize: typography.size.sm,
       fontFamily: typography.fontFamily.bodySemiBold,
       color: theme.muted,
       marginBottom: spacing.xs + 2,
-      marginTop: spacing.sm + 4,
+      marginTop: spacing.sm,
+    },
+    hint: {
+      fontSize: typography.size.xs + 1,
+      fontFamily: typography.fontFamily.body,
+      color: theme.muted,
+      marginBottom: spacing.sm,
     },
     input: {
       backgroundColor: theme.surface,
@@ -188,5 +341,27 @@ function makeStyles(
     },
     textArea: { height: 90, paddingTop: spacing.sm + 2, textAlignVertical: 'top' },
     row: { flexDirection: 'row', gap: spacing.sm + 4 },
+    chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    chip: {
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.md - 2,
+      paddingVertical: spacing.xs + 3,
+      backgroundColor: theme.surface,
+    },
+    chipActive: { borderColor: theme.primary, backgroundColor: theme.primary + '1a' },
+    chipText: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.body, color: theme.muted },
+    chipTextActive: { color: theme.primary, fontFamily: typography.fontFamily.bodySemiBold },
+    suggestBox: {
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: radius.sm + 4,
+      marginTop: 4,
+      overflow: 'hidden',
+    },
+    suggestItem: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
+    suggestText: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.body, color: theme.text },
   });
 }

@@ -3,11 +3,12 @@ import { ok } from '../../common/response';
 import { categoriesRepository } from './categories.repository';
 
 export const categoriesController = {
-  async list(_req: Request, res: Response) {
-    const rows = await categoriesRepository.findAll();
-    return ok(
-      res,
-      rows.map((r) => ({ id: r.id, name: r.name, type: r.type, icon: r.icon }))
-    );
+  async list(req: Request, res: Response) {
+    // ?parentId=X -> sous-catégories ; ?roots=true -> racines seules ;
+    // sans param -> toutes (rétrocompat avec les tuiles de l'accueil).
+    const { parentId, roots } = req.query;
+    if (parentId) return ok(res, await categoriesRepository.findByParent(parentId as string));
+    if (roots === 'true') return ok(res, await categoriesRepository.findRoots());
+    return ok(res, await categoriesRepository.findAll());
   },
 };

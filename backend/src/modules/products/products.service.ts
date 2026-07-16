@@ -43,4 +43,8 @@ export const productsService = {
     if (!product) throw Errors.notFound('Produit introuvable');
     return mapProduct(product);
   },
+
+  priceHint(categoryId: string) {
+    return productsRepository.priceHint(categoryId);
+  },
 };

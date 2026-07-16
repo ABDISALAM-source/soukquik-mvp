@@ -76,9 +76,11 @@ export interface ProductInput {
   name: string;
   description?: string;
   categoryId?: string;
+  brandId?: string;
   price: number;
   stock?: number;
   imageUrl?: string;
+  tags?: string[];
 }
 
 export async function createProduct(shopId: string, input: ProductInput) {
@@ -89,6 +91,32 @@ export async function createProduct(shopId: string, input: ProductInput) {
 export async function updateProduct(id: string, input: Partial<ProductInput>) {
   const res = await api.patch(`/products/${id}`, input);
   return res.data.data;
+}
+
+// --- Cascade d'ajout d'article (Phase 10 Lot B) ---
+export async function fetchRootCategories() {
+  const res = await api.get('/categories', { params: { roots: true } });
+  return res.data.data as { id: string; name: string; type: string; parentId: string | null }[];
+}
+
+export async function fetchSubcategories(parentId: string) {
+  const res = await api.get('/categories', { params: { parentId } });
+  return res.data.data as { id: string; name: string; parentId: string }[];
+}
+
+export async function searchBrands(q: string) {
+  const res = await api.get('/brands', { params: { q } });
+  return res.data.data as { id: string; name: string; logoUrl: string | null }[];
+}
+
+export async function findOrCreateBrand(name: string) {
+  const res = await api.post('/brands', { name });
+  return res.data.data as { id: string; name: string };
+}
+
+export async function fetchPriceHint(categoryId: string) {
+  const res = await api.get('/products/price-hint', { params: { categoryId } });
+  return res.data.data as { count: number; min: number | null; median: number | null; max: number | null };
 }
 
 export async function deactivateProduct(id: string) {

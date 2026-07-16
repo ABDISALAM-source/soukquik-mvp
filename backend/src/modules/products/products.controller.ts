@@ -30,4 +30,11 @@ export const productsController = {
     const product = await productsService.getById(req.params.id);
     return ok(res, product);
   },
+
+  async priceHint(req: Request, res: Response) {
+    const categoryId = req.query.categoryId as string;
+    if (!categoryId) return ok(res, { count: 0, min: null, median: null, max: null });
+    const hint = await productsService.priceHint(categoryId);
+    return ok(res, hint);
+  },
 };
