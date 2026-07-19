@@ -10,6 +10,7 @@ export const light = {
   text: '#1F1F1F',
   muted: '#7A7A7A',
   success: '#2E9E5B',
+  warning: '#D98A0B',
   danger: '#D64545',
   border: '#EDE7DE',
 };
@@ -24,6 +25,7 @@ export const dark = {
   text: '#FFFFFF',
   muted: '#8E8E93',
   success: '#4CC57C',
+  warning: '#F5B455',
   danger: '#F2726B',
   border: '#262B35',
 };

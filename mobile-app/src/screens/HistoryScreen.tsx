@@ -5,6 +5,7 @@ import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { EmptyState } from '../components/EmptyState';
+import { FormHeader } from '../components/FormHeader';
 import { Skeleton } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
 import * as ordersApi from '../api/orders';
@@ -62,7 +63,7 @@ export function HistoryScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Historique</Text>
+      <FormHeader title="Historique" subtitle="Tes commandes et réservations" />
 
       {loading ? (
         <View style={{ paddingHorizontal: 20, gap: 12 }}>
@@ -71,12 +72,12 @@ export function HistoryScreen() {
           ))}
         </View>
       ) : items.length === 0 ? (
-        <EmptyState message="Aucune commande ou réservation pour le moment." />
+        <EmptyState icon="receipt-outline" title="Rien pour l'instant" message="Tes commandes et réservations apparaîtront ici." />
       ) : (
         <FlatList
           data={items}
           keyExtractor={(item) => `${item.kind}-${item.id}`}
-          contentContainerStyle={{ paddingBottom: spacing.xxl }}
+          contentContainerStyle={{ padding: spacing.md, gap: spacing.sm, paddingBottom: spacing.xxl }}
           renderItem={({ item }) => (
             <Pressable
               style={styles.row}
@@ -118,8 +119,12 @@ function makeStyles(
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm + 4,
-      paddingHorizontal: spacing.lg - 4,
-      paddingVertical: spacing.sm + 4,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md - 2,
+      backgroundColor: theme.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     iconWrap: {
       width: 36,

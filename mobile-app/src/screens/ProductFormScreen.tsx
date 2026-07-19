@@ -5,6 +5,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
+import { FormHeader } from '../components/FormHeader';
 import * as catalogApi from '../api/catalog';
 
 export function ProductFormScreen() {
@@ -178,9 +179,9 @@ export function ProductFormScreen() {
   if (loading) return <EmptyState message="Chargement..." />;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>{isEditing ? 'Modifier le produit' : 'Ajouter un produit'}</Text>
-
+    <View style={styles.screen}>
+      <FormHeader title={isEditing ? 'Modifier le produit' : 'Ajouter un produit'} />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       {/* 1. CATÉGORIE */}
       <Text style={styles.step}>1 · Catégorie</Text>
       <View style={styles.chipWrap}>
@@ -295,7 +296,8 @@ export function ProductFormScreen() {
           <Button label="Désactiver ce produit" variant="secondary" onPress={confirmDeactivate} loading={deactivating} />
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -306,9 +308,9 @@ function makeStyles(
   typography: { fontFamily: Record<string, string>; size: Record<string, number> }
 ) {
   return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: theme.background },
     container: { flex: 1, backgroundColor: theme.background },
-    content: { padding: spacing.lg - 4, paddingTop: 60, paddingBottom: spacing.lg + 20 },
-    title: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: spacing.md },
+    content: { padding: spacing.lg - 4, paddingTop: spacing.md, paddingBottom: spacing.lg + 20 },
     step: {
       fontSize: typography.size.sm + 1,
       fontFamily: typography.fontFamily.bodySemiBold,

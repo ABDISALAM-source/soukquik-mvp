@@ -6,6 +6,7 @@ import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
 import { FilterChips } from '../components/FilterChips';
 import { EmptyState } from '../components/EmptyState';
+import { FormHeader } from '../components/FormHeader';
 import * as catalogApi from '../api/catalog';
 
 export function ServiceFormScreen() {
@@ -104,9 +105,9 @@ export function ServiceFormScreen() {
   const categoryOptions = [{ value: '', label: 'Aucune' }, ...categories.map((c) => ({ value: c.id, label: c.name }))];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{isEditing ? 'Modifier le service' : 'Ajouter un service'}</Text>
-
+    <View style={styles.screen}>
+      <FormHeader title={isEditing ? 'Modifier le service' : 'Ajouter un service'} />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.label}>Titre</Text>
       <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Titre du service" placeholderTextColor={colors.muted} />
 
@@ -155,7 +156,8 @@ export function ServiceFormScreen() {
           <Button label="Désactiver ce service" variant="secondary" onPress={confirmDeactivate} loading={deactivating} />
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -166,9 +168,9 @@ function makeStyles(
   typography: { fontFamily: Record<string, string>; size: Record<string, number> }
 ) {
   return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: theme.background },
     container: { flex: 1, backgroundColor: theme.background },
-    content: { padding: spacing.lg - 4, paddingTop: 60, paddingBottom: spacing.lg + 20 },
-    title: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: spacing.lg },
+    content: { padding: spacing.lg - 4, paddingTop: spacing.md, paddingBottom: spacing.lg + 20 },
     label: {
       fontSize: typography.size.sm,
       fontFamily: typography.fontFamily.bodySemiBold,

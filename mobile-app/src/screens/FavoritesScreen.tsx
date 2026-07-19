@@ -5,6 +5,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
+import { FormHeader } from '../components/FormHeader';
 import { Skeleton } from '../components/Skeleton';
 import * as likesApi from '../api/likes';
 import * as catalogApi from '../api/catalog';
@@ -64,7 +65,7 @@ export function FavoritesScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Favoris</Text>
+      <FormHeader title="Favoris" subtitle="Tes boutiques et articles aimés" />
 
       {loading ? (
         <View style={styles.grid}>
@@ -75,13 +76,13 @@ export function FavoritesScreen() {
           ))}
         </View>
       ) : items.length === 0 ? (
-        <EmptyState message="Tu n'as encore rien aimé. Le cœur ❤️ sur une boutique ou un article l'ajoute ici." />
+        <EmptyState icon="heart-outline" title="Aucun favori" message="Appuie sur le cœur d'une boutique ou d'un article pour le retrouver ici." />
       ) : (
         <FlatList
           data={items}
           keyExtractor={(item) => `${item.targetType}-${item.id}`}
           numColumns={2}
-          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: spacing.xxl }}
+          contentContainerStyle={{ paddingHorizontal: 12, paddingTop: spacing.md, paddingBottom: spacing.xxl }}
           renderItem={({ item }) => (
             <View style={styles.gridItem}>
               <Card title={item.title} subtitle={item.subtitle} imageUrl={item.imageUrl} onPress={() => openItem(item)} />

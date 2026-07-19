@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { EmptyState } from '../components/EmptyState';
+import { FormHeader } from '../components/FormHeader';
 import { Skeleton } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
 import * as promotionsApi from '../api/promotions';
@@ -44,23 +45,25 @@ export function AdminDashboardScreen() {
     }
   }
 
+  const pendingCount = promotions.filter((p) => p.status === 'pending').length;
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Promotions</Text>
+      <FormHeader title="Modération" subtitle={`${pendingCount} promotion${pendingCount > 1 ? 's' : ''} en attente`} />
 
       {loading ? (
-        <View style={{ paddingHorizontal: 20, gap: 12 }}>
+        <View style={{ padding: spacing.md, gap: 12 }}>
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} height={84} />
           ))}
         </View>
       ) : promotions.length === 0 ? (
-        <EmptyState message="Aucune promotion soumise pour le moment." />
+        <EmptyState icon="megaphone-outline" title="Aucune promotion" message="Les demandes de promotion des vendeurs apparaîtront ici." />
       ) : (
         <FlatList
           data={promotions}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: spacing.xxl }}
+          contentContainerStyle={{ padding: spacing.md, gap: spacing.sm, paddingBottom: spacing.xxl }}
           renderItem={({ item }) => (
             <View style={styles.row}>
               <View style={styles.rowTop}>
@@ -119,10 +122,11 @@ function makeStyles(
       paddingBottom: spacing.md,
     },
     row: {
-      paddingHorizontal: spacing.lg - 4,
-      paddingVertical: spacing.sm + 4,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
+      padding: spacing.md,
+      backgroundColor: theme.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     rowTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
     name: { fontSize: typography.size.sm + 1, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text },

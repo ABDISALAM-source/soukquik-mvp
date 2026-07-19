@@ -10,6 +10,7 @@ import { Skeleton } from '../components/Skeleton';
 import * as catalogApi from '../api/catalog';
 import type { CompareResult } from '../api/catalog';
 import { useLocationStore } from '../store/location';
+import { MAPS_ENABLED } from '../config/maps';
 
 // Comparaison multi-boutiques (Phase 10 C1) : un même article à travers
 // toutes les boutiques, avec prix + distance, triable, en liste ou sur carte.
@@ -85,17 +86,24 @@ export function CompareScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={8} style={styles.backInline}>
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
+        </Pressable>
         <Text style={styles.title} numberOfLines={1}>
           {title ?? (isPhotoMode ? 'Résultats par photo' : `« ${query} »`)}
         </Text>
-        <View style={styles.toggleRow}>
-          <Pressable onPress={() => setView('list')} style={[styles.toggle, view === 'list' && styles.toggleActive]}>
-            <Ionicons name="list" size={16} color={view === 'list' ? colors.primary : colors.muted} />
-          </Pressable>
-          <Pressable onPress={() => setView('map')} style={[styles.toggle, view === 'map' && styles.toggleActive]}>
-            <Ionicons name="map" size={16} color={view === 'map' ? colors.primary : colors.muted} />
-          </Pressable>
-        </View>
+        {/* Bascule liste/carte masquée tant que Google Maps n'est pas configuré
+            (une carte sans clé API fait planter l'app). */}
+        {MAPS_ENABLED && (
+          <View style={styles.toggleRow}>
+            <Pressable onPress={() => setView('list')} style={[styles.toggle, view === 'list' && styles.toggleActive]}>
+              <Ionicons name="list" size={16} color={view === 'list' ? colors.primary : colors.muted} />
+            </Pressable>
+            <Pressable onPress={() => setView('map')} style={[styles.toggle, view === 'map' && styles.toggleActive]}>
+              <Ionicons name="map" size={16} color={view === 'map' ? colors.primary : colors.muted} />
+            </Pressable>
+          </View>
+        )}
       </View>
 
       {/* Tri (mode texte uniquement — le mode photo est trié par similarité) */}
@@ -118,7 +126,7 @@ export function CompareScreen() {
         </View>
       ) : results.length === 0 ? (
         <EmptyState message={isPhotoMode ? 'Aucun article visuellement proche trouvé.' : 'Aucune boutique ne propose cet article.'} />
-      ) : view === 'map' && withCoords.length > 0 ? (
+      ) : MAPS_ENABLED && view === 'map' && withCoords.length > 0 ? (
         <MapView
           style={styles.map}
           initialRegion={{
@@ -159,7 +167,8 @@ function makeStyles(
 ) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg - 4, paddingTop: 60, paddingBottom: spacing.sm },
+    header: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingHorizontal: spacing.md, paddingTop: 56, paddingBottom: spacing.sm },
+    backInline: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', marginLeft: -6 },
     title: { flex: 1, fontSize: 20, fontFamily: typography.fontFamily.headingBold, color: theme.text },
     toggleRow: { flexDirection: 'row', gap: 4 },
     toggle: { padding: 8, borderRadius: radius.sm, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border },

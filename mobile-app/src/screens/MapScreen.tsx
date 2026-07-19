@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
@@ -9,6 +9,7 @@ import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
 import * as catalogApi from '../api/catalog';
 import { useLocationStore } from '../store/location';
+import { MAPS_ENABLED } from '../config/maps';
 
 const RADIUS_KM = 15;
 const DEFAULT_DELTA = 0.05;
@@ -72,6 +73,64 @@ export function MapScreen() {
   }
 
   if (!coords) return <EmptyState message="Chargement..." />;
+
+  // Repli SANS carte (clé Google Maps absente) : liste des boutiques/services
+  // à proximité, triés par distance. Évite le crash natif du MapView.
+  if (!MAPS_ENABLED) {
+    const items = [
+      ...shops.map((s) => ({
+        key: `shop-${s.id}`,
+        kind: 'shop' as const,
+        title: s.name,
+        subtitle: s.address ?? 'Boutique',
+        distanceKm: s.distanceKm,
+        icon: 'storefront' as const,
+        onPress: () => navigation.navigate('Shop', { shopId: s.id }),
+      })),
+      ...services.map((sv) => ({
+        key: `service-${sv.id}`,
+        kind: 'service' as const,
+        title: sv.title,
+        subtitle: `${sv.price} DJF · ${sv.priceUnit}`,
+        distanceKm: sv.distanceKm,
+        icon: 'construct' as const,
+        onPress: () => navigation.navigate('Service', { serviceId: sv.id }),
+      })),
+    ].sort((a, b) => (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9));
+
+    return (
+      <View style={styles.container}>
+        <View style={styles.fallbackHeader}>
+          <Ionicons name="location" size={18} color={colors.primary} />
+          <Text style={styles.fallbackHeaderText}>À proximité ({RADIUS_KM} km)</Text>
+        </View>
+        {!loading && items.length === 0 ? (
+          <EmptyState message={`Rien à proximité dans un rayon de ${RADIUS_KM} km.`} />
+        ) : (
+          <FlatList
+            data={items}
+            keyExtractor={(i) => i.key}
+            contentContainerStyle={{ padding: spacing.md, gap: spacing.sm }}
+            renderItem={({ item }) => (
+              <Pressable style={styles.row} onPress={item.onPress}>
+                <View style={styles.rowIcon}>
+                  <Ionicons name={item.icon} size={20} color={colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowTitle} numberOfLines={1}>{item.title}</Text>
+                  <Text style={styles.rowSub} numberOfLines={1}>{item.subtitle}</Text>
+                </View>
+                {item.distanceKm != null && (
+                  <Text style={styles.rowDist}>{item.distanceKm.toFixed(1)} km</Text>
+                )}
+                <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+              </Pressable>
+            )}
+          />
+        )}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -163,5 +222,35 @@ function makeStyles(
       borderColor: theme.border,
     },
     loadingText: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodyMedium, color: theme.text },
+    fallbackHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.xs,
+    },
+    fallbackHeaderText: { fontSize: typography.size.md, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 14,
+      padding: spacing.sm + 2,
+    },
+    rowIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.primary + '1a',
+    },
+    rowTitle: { fontSize: typography.size.md, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text },
+    rowSub: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 1 },
+    rowDist: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodyMedium, color: theme.primary },
   });
 }

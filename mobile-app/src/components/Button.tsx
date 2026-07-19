@@ -1,21 +1,26 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 
 interface Props {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'ghost';
   loading?: boolean;
   disabled?: boolean;
+  /** Icône Ionicons optionnelle, affichée avant le libellé. */
+  icon?: keyof typeof Ionicons.glyphMap;
+  size?: 'md' | 'lg';
 }
 
-export function Button({ label, onPress, variant = 'primary', loading, disabled }: Props) {
-  const { colors, spacing, radius, typography } = useTheme();
+export function Button({ label, onPress, variant = 'primary', loading, disabled, icon, size = 'md' }: Props) {
+  const { colors, spacing, radius, shadow, typography } = useTheme();
   const styles = useMemo(() => makeStyles(colors, spacing, radius, typography), [colors, spacing, radius, typography]);
   const isPrimary = variant === 'primary';
+  const isGhost = variant === 'ghost';
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
 
@@ -25,6 +30,7 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled 
   }));
 
   const isInactive = disabled || loading;
+  const fg = isPrimary ? '#fff' : colors.primary;
 
   return (
     <Pressable
@@ -43,15 +49,20 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled 
       <Animated.View
         style={[
           styles.base,
-          isPrimary ? styles.primary : styles.secondary,
+          size === 'lg' && styles.lg,
+          isPrimary ? styles.primary : isGhost ? styles.ghost : styles.secondary,
+          isPrimary && !isInactive && shadow.sm,
           isInactive && styles.disabled,
           animatedStyle,
         ]}
       >
         {loading ? (
-          <ActivityIndicator color={isPrimary ? '#fff' : colors.primary} />
+          <ActivityIndicator color={fg} />
         ) : (
-          <Text style={[styles.text, isPrimary ? styles.textPrimary : styles.textSecondary]}>{label}</Text>
+          <View style={styles.content}>
+            {icon ? <Ionicons name={icon} size={18} color={fg} /> : null}
+            <Text style={[styles.text, { color: fg }]}>{label}</Text>
+          </View>
         )}
       </Animated.View>
     </Pressable>
@@ -60,23 +71,24 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled 
 
 function makeStyles(
   theme: Palette,
-  spacing: { md: number },
-  radius: { sm: number },
+  spacing: { sm: number; md: number },
+  radius: { sm: number; md: number },
   typography: { fontFamily: Record<string, string>; size: Record<string, number> }
 ) {
   return StyleSheet.create({
     base: {
-      height: 48,
-      borderRadius: radius.sm + 4,
+      height: 50,
+      borderRadius: radius.md,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: spacing.md,
     },
+    lg: { height: 56, borderRadius: radius.md + 2 },
+    content: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
     primary: { backgroundColor: theme.primary },
     secondary: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: theme.primary },
+    ghost: { backgroundColor: theme.primary + '18' },
     disabled: { opacity: 0.5 },
-    text: { fontSize: typography.size.sm + 1, fontFamily: typography.fontFamily.bodySemiBold },
-    textPrimary: { color: '#fff' },
-    textSecondary: { color: theme.primary },
+    text: { fontSize: typography.size.md, fontFamily: typography.fontFamily.bodySemiBold },
   });
 }

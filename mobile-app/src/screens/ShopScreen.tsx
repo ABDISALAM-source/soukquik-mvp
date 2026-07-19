@@ -9,6 +9,8 @@ import { EmptyState } from '../components/EmptyState';
 import { Avatar } from '../components/Avatar';
 import { RatingStars } from '../components/RatingStars';
 import { ReviewSection } from '../components/ReviewSection';
+import { GradientBanner } from '../components/GradientBanner';
+import { BackButton } from '../components/BackButton';
 import * as catalogApi from '../api/catalog';
 import * as likesApi from '../api/likes';
 import { usePresence } from '../hooks/usePresence';
@@ -62,7 +64,9 @@ export function ShopScreen() {
     : products;
 
   return (
-    <FlatList
+    <View style={styles.screen}>
+      <BackButton />
+      <FlatList
       style={styles.container}
       data={filteredProducts}
       keyExtractor={(item) => item.id}
@@ -83,8 +87,8 @@ export function ShopScreen() {
       }
       ListHeaderComponent={
         <>
-          {/* EN-TÊTE */}
-          <View style={styles.header}>
+          {/* EN-TÊTE HÉROS (bannière dégradée) */}
+          <GradientBanner style={styles.hero}>
             <View style={styles.headerTop}>
               <Avatar imageUrl={shop.logoUrl} name={shop.name} size={72} pulseIntensity={presence.intensity} />
               <View style={styles.headerInfo}>
@@ -92,13 +96,13 @@ export function ShopScreen() {
                 {shop.address ? <Text style={styles.address}>{shop.address}</Text> : null}
                 {shop.isOpen === false ? (
                   <View style={styles.closedBadge}>
-                    <Ionicons name="moon" size={11} color={colors.danger} />
+                    <Ionicons name="moon" size={11} color="#fff" />
                     <Text style={styles.closedText}>Fermé actuellement</Text>
                   </View>
                 ) : null}
               </View>
               <Pressable onPress={toggleLike} style={styles.likeButton} hitSlop={8}>
-                <Ionicons name={likeState.liked ? 'heart' : 'heart-outline'} size={22} color={likeState.liked ? colors.danger : colors.muted} />
+                <Ionicons name={likeState.liked ? 'heart' : 'heart-outline'} size={22} color={likeState.liked ? '#FF6B6B' : '#fff'} />
                 <Text style={styles.likeCount}>{likeState.count}</Text>
               </Pressable>
             </View>
@@ -107,19 +111,19 @@ export function ShopScreen() {
 
             {/* STATS */}
             <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Ionicons name="people" size={14} color={colors.primary} />
+              <View style={styles.statChip}>
+                <Ionicons name="people" size={14} color="#fff" />
                 <Text style={styles.statText}>{presence.count} en ce moment</Text>
               </View>
-              <View style={styles.statItem}>
-                <Ionicons name="bag-check" size={14} color={colors.primary} />
+              <View style={styles.statChip}>
+                <Ionicons name="bag-check" size={14} color="#fff" />
                 <Text style={styles.statText}>{shop.salesCount ?? 0} ventes</Text>
               </View>
-              <View style={styles.statItem}>
+              <View style={styles.ratingChip}>
                 <RatingStars rating={reviewSummary.average} count={reviewSummary.count} size={13} />
               </View>
             </View>
-          </View>
+          </GradientBanner>
 
           {/* LES PLUS VUS / VENDUS DE CETTE BOUTIQUE */}
           {popularProducts.length > 0 && !query ? (
@@ -163,7 +167,8 @@ export function ShopScreen() {
       ListFooterComponent={
         <ReviewSection targetType="shop" targetId={shopId} onSummaryChange={setReviewSummary} />
       }
-    />
+      />
+    </View>
   );
 }
 
@@ -174,20 +179,22 @@ function makeStyles(
   typography: { fontFamily: Record<string, string>; size: Record<string, number> }
 ) {
   return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: theme.background },
     container: { flex: 1, backgroundColor: theme.background },
-    header: { padding: spacing.lg - 4, paddingTop: 60 },
+    hero: { paddingHorizontal: spacing.lg - 4, paddingTop: 84, paddingBottom: spacing.lg, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, marginBottom: spacing.sm },
     headerTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
     headerInfo: { flex: 1 },
-    name: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text },
-    address: { fontSize: typography.size.sm - 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 2 },
+    name: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: '#fff' },
+    address: { fontSize: typography.size.sm - 1, fontFamily: typography.fontFamily.body, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
     likeButton: { alignItems: 'center', gap: 2 },
-    likeCount: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, color: theme.muted },
-    closedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 4, backgroundColor: theme.danger + '1a', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
-    closedText: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, color: theme.danger },
-    description: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: theme.text, marginTop: spacing.md },
-    statsRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
-    statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    statText: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodyMedium, color: theme.muted },
+    likeCount: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, color: '#fff' },
+    closedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 4, backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+    closedText: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, color: '#fff' },
+    description: { fontSize: typography.size.md - 2, fontFamily: typography.fontFamily.body, color: 'rgba(255,255,255,0.92)', marginTop: spacing.md },
+    statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
+    statChip: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.16)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.md },
+    ratingChip: { backgroundColor: 'rgba(255,255,255,0.92)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.md, justifyContent: 'center' },
+    statText: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodyMedium, color: '#fff' },
     searchWrapper: {
       flexDirection: 'row',
       alignItems: 'center',

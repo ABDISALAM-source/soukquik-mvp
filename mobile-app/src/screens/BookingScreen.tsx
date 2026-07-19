@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
+import { FormHeader } from '../components/FormHeader';
 import * as ordersApi from '../api/orders';
 import * as availabilityApi from '../api/availability';
 import { nextDays } from '../utils/dates';
@@ -30,8 +32,8 @@ function generateSlots(windows: { startTime: string; endTime: string }[]): strin
 }
 
 export function BookingScreen() {
-  const { colors, spacing, radius, typography } = useTheme();
-  const styles = useMemo(() => makeStyles(colors, spacing, radius, typography), [colors, spacing, radius, typography]);
+  const { colors, spacing, radius, shadow, typography } = useTheme();
+  const styles = useMemo(() => makeStyles(colors, spacing, radius, shadow, typography), [colors, spacing, radius, shadow, typography]);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { serviceId } = route.params;
@@ -79,79 +81,120 @@ export function BookingScreen() {
     }
   }
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Réserver ce service</Text>
+  const selectedLabel = UPCOMING_DAYS.find((d) => d.date === date)?.label;
 
-      <Text style={styles.label}>Date</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-        {UPCOMING_DAYS.map((d) => (
-          <Chip key={d.date} label={d.label} active={date === d.date} onPress={() => setDate(d.date)} />
-        ))}
+  return (
+    <View style={styles.screen}>
+      <FormHeader title="Réserver ce service" subtitle="Choisis une date et un créneau" />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* DATE */}
+        <View style={styles.card}>
+          <View style={styles.cardHead}>
+            <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+            <Text style={styles.cardTitle}>Date</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+            {UPCOMING_DAYS.map((d) => (
+              <Chip key={d.date} label={d.label} active={date === d.date} onPress={() => setDate(d.date)} />
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* HORAIRE */}
+        <View style={styles.card}>
+          <View style={styles.cardHead}>
+            <Ionicons name="time-outline" size={18} color={colors.primary} />
+            <Text style={styles.cardTitle}>Horaire {selectedLabel ? `· ${selectedLabel}` : ''}</Text>
+          </View>
+          {checkingAvailability ? (
+            <Text style={styles.hint}>Vérification des disponibilités…</Text>
+          ) : closed ? (
+            <Text style={styles.hint}>Le prestataire n'est pas disponible ce jour-là. Choisis une autre date.</Text>
+          ) : slots.length === 0 ? (
+            <Text style={styles.hint}>Aucun créneau disponible ce jour-là.</Text>
+          ) : (
+            <View style={styles.slotGrid}>
+              {slots.map((s) => (
+                <Chip key={s} label={s} active={time === s} onPress={() => setTime(s)} />
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* BESOIN */}
+        <View style={styles.card}>
+          <View style={styles.cardHead}>
+            <Ionicons name="document-text-outline" size={18} color={colors.primary} />
+            <Text style={styles.cardTitle}>Décris ton besoin</Text>
+          </View>
+          <TextInput
+            style={styles.textarea}
+            multiline
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Ex : panne de courant dans la cuisine…"
+            placeholderTextColor={colors.muted}
+          />
+        </View>
       </ScrollView>
 
-      <Text style={styles.label}>Horaire</Text>
-      {checkingAvailability ? (
-        <Text style={styles.hint}>Vérification des disponibilités...</Text>
-      ) : closed ? (
-        <Text style={styles.hint}>Le prestataire n'est pas disponible ce jour-là. Choisis une autre date.</Text>
-      ) : slots.length === 0 ? (
-        <Text style={styles.hint}>Aucun créneau disponible ce jour-là.</Text>
-      ) : (
-        <View style={styles.slotGrid}>
-          {slots.map((s) => (
-            <Chip key={s} label={s} active={time === s} onPress={() => setTime(s)} />
-          ))}
-        </View>
-      )}
-
-      <Text style={styles.label}>Décrivez votre besoin</Text>
-      <TextInput
-        style={styles.textarea}
-        multiline
-        numberOfLines={4}
-        value={notes}
-        onChangeText={setNotes}
-        placeholder="Ex: panne de courant dans la cuisine..."
-        placeholderTextColor={colors.muted}
-      />
-      <Button label="Confirmer la réservation" onPress={submit} loading={loading} disabled={!time} />
-    </ScrollView>
+      {/* CTA COLLÉ */}
+      <View style={styles.bottomBar}>
+        {time ? <Text style={styles.recap}>{selectedLabel} · {time}</Text> : <Text style={styles.recapMuted}>Sélectionne un créneau</Text>}
+        <Button label="Confirmer la réservation" icon="checkmark-circle-outline" onPress={submit} loading={loading} disabled={!time} />
+      </View>
+    </View>
   );
 }
 
 function makeStyles(
   theme: Palette,
   spacing: { xs: number; sm: number; md: number; lg: number },
-  radius: { sm: number },
+  radius: { sm: number; md: number },
+  shadow: { lg: object },
   typography: { fontFamily: Record<string, string>; size: Record<string, number> }
 ) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.background },
-    content: { padding: 20, paddingTop: 60, paddingBottom: spacing.lg + 20 },
-    title: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: 24 },
-    label: {
-      fontSize: typography.size.md - 2,
-      fontFamily: typography.fontFamily.bodySemiBold,
-      color: theme.text,
-      marginBottom: 8,
-      marginTop: spacing.md,
+    screen: { flex: 1, backgroundColor: theme.background },
+    content: { padding: spacing.md, paddingBottom: 140, gap: spacing.md },
+    card: {
+      backgroundColor: theme.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: theme.border,
+      padding: spacing.md,
     },
-    chipRow: { flexDirection: 'row' },
+    cardHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.sm + 2 },
+    cardTitle: { fontSize: typography.size.md, fontFamily: typography.fontFamily.bodySemiBold, color: theme.text },
+    chipRow: { gap: spacing.sm, paddingRight: spacing.md },
     hint: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.body, color: theme.muted },
     slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
     textarea: {
-      backgroundColor: theme.surface,
+      backgroundColor: theme.background,
       borderWidth: 1,
       borderColor: theme.border,
-      borderRadius: radius.sm + 4,
+      borderRadius: radius.md,
       padding: 14,
-      marginTop: 8,
-      marginBottom: 24,
       fontFamily: typography.fontFamily.body,
       color: theme.text,
       textAlignVertical: 'top',
-      minHeight: 100,
+      minHeight: 96,
     },
+    bottomBar: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.sm + 2,
+      paddingBottom: spacing.lg + 6,
+      backgroundColor: theme.surface,
+      borderTopWidth: 1,
+      borderTopColor: theme.border,
+      gap: spacing.sm,
+      ...shadow.lg,
+    },
+    recap: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.bodySemiBold, color: theme.primary, textAlign: 'center' },
+    recapMuted: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.body, color: theme.muted, textAlign: 'center' },
   });
 }

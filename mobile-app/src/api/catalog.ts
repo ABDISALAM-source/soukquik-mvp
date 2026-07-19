@@ -55,6 +55,10 @@ export interface ShopInput {
   longitude?: number;
   address?: string;
   logoUrl?: string;
+  // Infos pro (Phase 11)
+  patente?: string;
+  slogan?: string;
+  idDocumentUrl?: string;
 }
 
 export async function createShop(input: ShopInput) {
@@ -172,6 +176,11 @@ export interface ServiceInput {
   latitude?: number;
   longitude?: number;
   serviceAreaKm?: number;
+  // Infos pro (Phase 11)
+  logoUrl?: string;
+  patente?: string;
+  slogan?: string;
+  idDocumentUrl?: string;
 }
 
 export async function createService(input: ServiceInput) {

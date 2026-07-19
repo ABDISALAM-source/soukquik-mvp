@@ -5,6 +5,7 @@ import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { EmptyState } from '../components/EmptyState';
+import { FormHeader } from '../components/FormHeader';
 import { Skeleton } from '../components/Skeleton';
 import * as notificationsApi from '../api/notifications';
 import type { AppNotification } from '../api/notifications';
@@ -14,9 +15,17 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   booking_status_changed: 'calendar',
 };
 
+// Traduction FR des statuts pour un texte de notification lisible (aligné sur StatusBadge).
+const STATUS_FR: Record<string, string> = {
+  pending: 'en attente', confirmed: 'confirmée', accepted: 'acceptée', preparing: 'en préparation',
+  ready: 'prête', delivering: 'en livraison', delivered: 'livrée', completed: 'terminée',
+  cancelled: 'annulée', rejected: 'refusée',
+};
+const fr = (s: string) => STATUS_FR[s] ?? s;
+
 const LABELS: Record<string, (payload: any) => string> = {
-  order_status_changed: (p) => `Ta commande chez ${p.shopName ?? 'la boutique'} est maintenant "${p.status}".`,
-  booking_status_changed: (p) => `Ta réservation pour "${p.serviceTitle ?? 'ce service'}" est maintenant "${p.status}".`,
+  order_status_changed: (p) => `Ta commande chez ${p.shopName ?? 'la boutique'} est maintenant ${fr(p.status)}.`,
+  booking_status_changed: (p) => `Ta réservation pour « ${p.serviceTitle ?? 'ce service'} » est maintenant ${fr(p.status)}.`,
 };
 
 // Statuts qui déclenchent une proposition d'avis : la prestation/livraison est terminée.
@@ -81,7 +90,7 @@ export function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Notifications</Text>
+      <FormHeader title="Notifications" />
 
       {loading ? (
         <View style={{ paddingHorizontal: 20, gap: 12 }}>
@@ -90,12 +99,12 @@ export function NotificationsScreen() {
           ))}
         </View>
       ) : items.length === 0 ? (
-        <EmptyState message="Aucune notification pour le moment." />
+        <EmptyState icon="notifications-outline" title="Aucune notification" message="Tu seras prévenu ici du suivi de tes commandes et réservations." />
       ) : (
         <FlatList
           data={items}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: spacing.xxl }}
+          contentContainerStyle={{ padding: spacing.md, gap: spacing.sm, paddingBottom: spacing.xxl }}
           renderItem={({ item }) => {
             const label = LABELS[item.type]?.(item.payload) ?? item.type;
             const icon = ICONS[item.type] ?? 'notifications';
@@ -138,10 +147,14 @@ function makeStyles(
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm + 4,
-      paddingHorizontal: spacing.lg - 4,
-      paddingVertical: spacing.sm + 4,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md - 2,
+      backgroundColor: theme.surface,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: theme.border,
     },
-    unreadDot: { position: 'absolute', left: 8, top: '50%', width: 6, height: 6, borderRadius: 3, backgroundColor: theme.primary },
+    unreadDot: { position: 'absolute', left: 6, top: '50%', width: 6, height: 6, borderRadius: 3, backgroundColor: theme.primary },
     iconWrap: {
       width: 36,
       height: 36,

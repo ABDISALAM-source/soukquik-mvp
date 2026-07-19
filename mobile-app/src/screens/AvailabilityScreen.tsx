@@ -6,6 +6,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
+import { FormHeader } from '../components/FormHeader';
 import * as availabilityApi from '../api/availability';
 import type { AvailabilityRule, AvailabilityException } from '../api/availability';
 import { nextDays, WEEKDAY_NAMES } from '../utils/dates';
@@ -112,8 +113,9 @@ export function AvailabilityScreen() {
   }));
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Mes disponibilités</Text>
+    <View style={styles.screen}>
+      <FormHeader title="Mes disponibilités" />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.intro}>
         Définis tes horaires hebdomadaires. Les clients ne pourront réserver un créneau précis que dans ces plages.
       </Text>
@@ -220,7 +222,8 @@ export function AvailabilityScreen() {
 
         <Button label="Ajouter l'exception" onPress={addException} loading={savingException} />
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -231,9 +234,9 @@ function makeStyles(
   typography: { fontFamily: Record<string, string>; size: Record<string, number> }
 ) {
   return StyleSheet.create({
+    screen: { flex: 1, backgroundColor: theme.background },
     container: { flex: 1, backgroundColor: theme.background },
-    content: { padding: spacing.lg - 4, paddingTop: 60, paddingBottom: spacing.lg + 40 },
-    title: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: spacing.xs },
+    content: { padding: spacing.lg - 4, paddingTop: spacing.md, paddingBottom: spacing.lg + 40 },
     intro: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginBottom: spacing.md },
     sectionTitle: {
       fontSize: typography.size.md,

@@ -1,9 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Dimensions, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, FlatList, Image, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useTheme } from '../theme/ThemeContext';
 import { Palette } from '../theme/theme';
 import { Button } from '../components/Button';
+import { GradientBanner } from '../components/GradientBanner';
 import { useSession } from '../store/session';
 
 const { width } = Dimensions.get('window');
@@ -22,7 +23,7 @@ const SLIDES = [
   {
     icon: 'notifications' as const,
     title: 'Reste informé',
-    text: "Suis tes commandes et réservations, et reçois une notification à chaque étape.",
+    text: 'Suis tes commandes et réservations, et reçois une notification à chaque étape.',
   },
 ];
 
@@ -45,6 +46,13 @@ export function OnboardingScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.brandRow}>
+        <Image source={require('../../assets/logo.png')} style={styles.brandLogo} />
+        <Text style={styles.brand}>
+          Souk<Text style={{ color: colors.primary }}>Quik</Text>
+        </Text>
+      </View>
+
       <FlatList
         ref={listRef}
         data={SLIDES}
@@ -55,9 +63,9 @@ export function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         renderItem={({ item }) => (
           <View style={styles.slide}>
-            <View style={styles.iconCircle}>
-              <Ionicons name={item.icon} size={48} color={colors.primary} />
-            </View>
+            <GradientBanner style={styles.iconBadge} radius={44}>
+              <Ionicons name={item.icon} size={52} color="#fff" />
+            </GradientBanner>
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.text}>{item.text}</Text>
           </View>
@@ -66,12 +74,17 @@ export function OnboardingScreen() {
 
       <View style={styles.dots}>
         {SLIDES.map((_, i) => (
-          <View key={i} style={[styles.dot, i === index && { backgroundColor: colors.primary, width: 18 }]} />
+          <View key={i} style={[styles.dot, i === index && styles.dotActive]} />
         ))}
       </View>
 
       <View style={styles.footer}>
-        <Button label={index === SLIDES.length - 1 ? 'Commencer' : 'Suivant'} onPress={next} />
+        <Button
+          label={index === SLIDES.length - 1 ? 'Commencer' : 'Suivant'}
+          icon={index === SLIDES.length - 1 ? 'rocket-outline' : 'arrow-forward'}
+          size="lg"
+          onPress={next}
+        />
         {index < SLIDES.length - 1 && (
           <Text style={styles.skip} onPress={consumeJustRegistered}>
             Passer
@@ -88,39 +101,48 @@ function makeStyles(
   typography: { fontFamily: Record<string, string>; size: Record<string, number> }
 ) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.background },
+    container: { flex: 1, backgroundColor: theme.background, paddingTop: 72 },
+    brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: spacing.md },
+    brandLogo: { width: 30, height: 30, borderRadius: 9 },
+    brand: { fontSize: 22, fontFamily: typography.fontFamily.headingBold, color: theme.text },
     slide: { width, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xl },
-    iconCircle: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
-      backgroundColor: theme.primary + '1f',
+    iconBadge: {
+      width: 132,
+      height: 132,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: spacing.lg,
+      marginBottom: spacing.xl,
+      shadowColor: theme.primary,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.6,
+      shadowRadius: 26,
+      elevation: 12,
     },
     title: {
-      fontSize: 22,
+      fontSize: 24,
       fontFamily: typography.fontFamily.headingBold,
       color: theme.text,
       textAlign: 'center',
       marginBottom: spacing.sm,
     },
     text: {
-      fontSize: typography.size.md - 1,
+      fontSize: typography.size.md,
       fontFamily: typography.fontFamily.body,
       color: theme.muted,
       textAlign: 'center',
-      lineHeight: 20,
+      lineHeight: 22,
+      paddingHorizontal: spacing.md,
     },
     dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: spacing.lg },
     dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.border },
-    footer: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl, alignItems: 'center', gap: spacing.sm },
+    dotActive: { backgroundColor: theme.primary, width: 20 },
+    footer: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl, gap: spacing.sm },
     skip: {
       fontSize: typography.size.sm,
       fontFamily: typography.fontFamily.bodyMedium,
       color: theme.muted,
       marginTop: spacing.xs,
+      textAlign: 'center',
     },
   });
 }

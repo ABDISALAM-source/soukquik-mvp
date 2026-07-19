@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SearchBar } from '../components/SearchBar';
@@ -366,7 +366,7 @@ export function HomeScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.logoRow}>
-            <Ionicons name="water" size={32} color={colors.primary} style={styles.logoIcon} />
+            <Image source={require('../../assets/logo.png')} style={styles.logoImg} />
             <View>
               <Text style={styles.hello}>
                 Souk<Text style={styles.helloAccent}>Quik</Text>
@@ -563,6 +563,7 @@ function makeStyles(
     headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     logoRow: { flexDirection: 'row', alignItems: 'center' },
     logoIcon: { marginRight: 8 },
+    logoImg: { width: 40, height: 40, borderRadius: 12, marginRight: 10 },
     hello: { fontSize: typography.size.xl, fontFamily: typography.fontFamily.headingBold, color: theme.text },
     helloAccent: { color: theme.primary },
     tagline: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 2 },

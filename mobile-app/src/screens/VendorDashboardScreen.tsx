@@ -7,6 +7,8 @@ import { Palette } from '../theme/theme';
 import { StatusBadge } from '../components/StatusBadge';
 import { EmptyState } from '../components/EmptyState';
 import { Button } from '../components/Button';
+import { GradientBanner } from '../components/GradientBanner';
+import { StatTile } from '../components/StatTile';
 import { api } from '../api/client';
 import * as ordersApi from '../api/orders';
 import * as catalogApi from '../api/catalog';
@@ -162,35 +164,35 @@ export function VendorDashboardScreen() {
       ListEmptyComponent={<EmptyState message="Aucune commande pour le moment." />}
       ListHeaderComponent={
         <>
-          {/* HEADER : salutation, revenu du jour, tendance, ouvert/fermé */}
-          <View style={styles.heroHeader}>
+          {/* HÉRO : revenu du jour sur bannière dégradée */}
+          <GradientBanner style={styles.heroCard} radius={22}>
             <View style={{ flex: 1 }}>
               <Text style={styles.greeting}>Bonjour, {shop.name}</Text>
               <Text style={styles.revenue}>
                 {analytics?.revenueToday ?? 0} <Text style={styles.revenueUnit}>DJF</Text>
               </Text>
               {analytics?.revenueTrendPct != null ? (
-                <Text style={[styles.trend, { color: analytics.revenueTrendPct >= 0 ? colors.success : colors.danger }]}>
-                  <Ionicons name={analytics.revenueTrendPct >= 0 ? 'trending-up' : 'trending-down'} size={13} />{' '}
-                  {analytics.revenueTrendPct >= 0 ? '+' : ''}{analytics.revenueTrendPct}% vs hier
-                </Text>
+                <View style={styles.trendPill}>
+                  <Ionicons name={analytics.revenueTrendPct >= 0 ? 'trending-up' : 'trending-down'} size={13} color="#fff" />
+                  <Text style={styles.trend}>
+                    {analytics.revenueTrendPct >= 0 ? '+' : ''}{analytics.revenueTrendPct}% vs hier
+                  </Text>
+                </View>
               ) : (
                 <Text style={styles.trendMuted}>Revenu du jour</Text>
               )}
             </View>
             <View style={styles.statusContainer}>
-              <Text style={[styles.statusText, { color: isStoreOpen ? colors.success : colors.muted }]}>
-                {isStoreOpen ? 'Ouvert' : 'Fermé'}
-              </Text>
+              <Text style={styles.statusText}>{isStoreOpen ? 'Ouvert' : 'Fermé'}</Text>
               <Switch
                 value={isStoreOpen}
                 onValueChange={toggleStoreOpen}
                 disabled={togglingOpen}
-                trackColor={{ false: colors.surfaceAlt, true: colors.primary + '80' }}
-                thumbColor={isStoreOpen ? colors.primary : colors.muted}
+                trackColor={{ false: 'rgba(255,255,255,0.25)', true: 'rgba(255,255,255,0.55)' }}
+                thumbColor="#fff"
               />
             </View>
-          </View>
+          </GradientBanner>
 
           {/* ACTIONS RAPIDES */}
           <View style={styles.quickActions}>
@@ -253,12 +255,12 @@ export function VendorDashboardScreen() {
             <>
               <Text style={styles.sectionTitle}>Statistiques</Text>
               <View style={styles.statsRow}>
-                <Stat label="Commandes du jour" value={analytics.ordersToday} styles={styles} />
-                <Stat label="Visites (jour)" value={analytics.visitsToday ?? 0} styles={styles} />
-                <Stat label="Visites (7 j)" value={analytics.visits7d ?? 0} styles={styles} />
-                <Stat label="Revenu total" value={`${analytics.revenueTotal} DJF`} styles={styles} />
-                <Stat label="Produits actifs" value={analytics.activeProducts} styles={styles} />
-                <Stat label="Ventes totales" value={shop.salesCount ?? '—'} styles={styles} />
+                <StatTile icon="receipt-outline" label="Commandes du jour" value={analytics.ordersToday} />
+                <StatTile icon="eye-outline" label="Visites (jour)" value={analytics.visitsToday ?? 0} tint={colors.success} />
+                <StatTile icon="trending-up-outline" label="Visites (7 j)" value={analytics.visits7d ?? 0} tint={colors.success} />
+                <StatTile icon="cash-outline" label="Revenu total" value={`${analytics.revenueTotal} DJF`} />
+                <StatTile icon="cube-outline" label="Produits actifs" value={analytics.activeProducts} tint="#FF9500" />
+                <StatTile icon="bag-check-outline" label="Ventes totales" value={shop.salesCount ?? '—'} tint="#FF9500" />
               </View>
               {analytics.series?.length ? <VisitsSparkline series={analytics.series} styles={styles} colors={colors} /> : null}
             </>
@@ -357,15 +359,6 @@ export function VendorDashboardScreen() {
   );
 }
 
-function Stat({ label, value, styles }: { label: string; value: any; styles: any }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 function QuickAction({ icon, tint, label, onPress, styles, colors }: { icon: any; tint: string; label: string; onPress: () => void; styles: any; colors: any }) {
   return (
     <Pressable style={styles.actionBtn} onPress={onPress}>
@@ -406,15 +399,16 @@ function makeStyles(
     container: { flex: 1, backgroundColor: theme.background },
     content: { padding: 20, paddingTop: 60, paddingBottom: spacing.xxl },
     title: { fontSize: 20, fontFamily: typography.fontFamily.headingBold, color: theme.text, marginBottom: 16 },
-    // --- Header riche (Phase 10) ---
-    heroHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg + 4 },
-    greeting: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.body, color: theme.muted, marginBottom: 4 },
-    revenue: { fontSize: 32, fontFamily: typography.fontFamily.headingBold, color: theme.text },
-    revenueUnit: { fontSize: 18, color: theme.primary, fontFamily: typography.fontFamily.bodySemiBold },
-    trend: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodySemiBold, marginTop: 4 },
-    trendMuted: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.body, color: theme.muted, marginTop: 4 },
+    // --- Héro : carte dégradée du revenu du jour ---
+    heroCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.md + 2, marginBottom: spacing.lg + 4 },
+    greeting: { fontSize: typography.size.sm, fontFamily: typography.fontFamily.body, color: 'rgba(255,255,255,0.85)', marginBottom: 4 },
+    revenue: { fontSize: 32, fontFamily: typography.fontFamily.headingBold, color: '#fff' },
+    revenueUnit: { fontSize: 18, color: 'rgba(255,255,255,0.9)', fontFamily: typography.fontFamily.bodySemiBold },
+    trendPill: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 8, backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+    trend: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.bodySemiBold, color: '#fff' },
+    trendMuted: { fontSize: typography.size.xs + 1, fontFamily: typography.fontFamily.body, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
     statusContainer: { alignItems: 'center' },
-    statusText: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, marginBottom: 5 },
+    statusText: { fontSize: typography.size.xs, fontFamily: typography.fontFamily.bodySemiBold, marginBottom: 5, color: '#fff' },
     // --- Actions rapides ---
     quickActions: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.lg + 6 },
     actionBtn: { alignItems: 'center', justifyContent: 'center', width: '31%', paddingVertical: spacing.md - 2, borderRadius: 16, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border },

@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -18,15 +18,20 @@ import Inter_600SemiBold from '@expo-google-fonts/inter/600SemiBold/Inter_600Sem
 import Ionicons from '@expo/vector-icons/build/Ionicons';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
+import { LogoMorph } from './src/components/LogoMorph';
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const { mode } = useTheme();
+  // Animation de lancement (logo qui se construit) jouée une fois au démarrage,
+  // par-dessus l'app déjà montée en dessous.
+  const [introDone, setIntroDone] = useState(false);
   return (
     <>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <RootNavigator />
+      {!introDone && <LogoMorph onDone={() => setIntroDone(true)} />}
     </>
   );
 }

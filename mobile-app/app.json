@@ -6,7 +6,10 @@
     "scheme": "soukquik",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#FAF7F2"
     },
     "ios": {
@@ -20,6 +23,10 @@
     },
     "android": {
       "package": "com.soukquik.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF7F2"
+      },
       "config": {
         "googleMaps": {
           "apiKey": ""
@@ -45,11 +52,11 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "SoukQuik utilise l'appareil photo pour rechercher un article à partir d'une photo.",
-          "photosPermission": "SoukQuik accède à tes photos pour rechercher un article à partir d'une image."
+          "cameraPermission": "SoukQuik utilise l'appareil photo pour tes photos de profil, logos et pièces justificatives.",
+          "photosPermission": "SoukQuik accède à tes photos pour ta photo de profil, ton logo et tes documents."
         }
       ],
-      "expo-web-browser"
+      "@react-native-google-signin/google-signin"
     ]
   }
 }
