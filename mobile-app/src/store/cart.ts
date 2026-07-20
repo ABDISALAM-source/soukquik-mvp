@@ -12,6 +12,8 @@ interface CartState {
   items: CartItem[];
   addItem: (item: CartItem) => void;
   removeItem: (productId: string) => void;
+  /** Fixe la quantité d'un article ; à 0 ou moins, l'article est retiré. */
+  setQuantity: (productId: string, quantity: number) => void;
   clear: () => void;
 }
 
@@ -30,5 +32,12 @@ export const useCart = create<CartState>((set) => ({
       return { items: [...state.items, item] };
     }),
   removeItem: (productId) => set((state) => ({ items: state.items.filter((i) => i.productId !== productId) })),
+  setQuantity: (productId, quantity) =>
+    set((state) => ({
+      items:
+        quantity <= 0
+          ? state.items.filter((i) => i.productId !== productId)
+          : state.items.map((i) => (i.productId === productId ? { ...i, quantity } : i)),
+    })),
   clear: () => set({ items: [] }),
 }));

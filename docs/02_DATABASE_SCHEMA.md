@@ -1,7 +1,12 @@
 # Schéma de base de données (PostgreSQL)
 
-Le SQL complet exécutable est dans `/database/migrations/001_init.sql`.
-Les données de démo sont dans `/database/seed/seed.sql`.
+Le SQL complet exécutable est dans `/database/migrations/` (`001_init.sql`
+pour le socle MVP, `002_v2_features.sql` pour les extensions V2 — voir plus
+bas). Les données de démo sont dans `/database/seed/seed.sql`.
+
+`npm run db:migrate` (`backend/scripts/run-sql.js`) suit les fichiers déjà
+appliqués via une table `schema_migrations` — relancer la commande ne
+rejoue que les nouvelles migrations.
 
 ## Tables principales du MVP
 
@@ -92,15 +97,32 @@ categories (1)───(N) shops / services / products
 chats (1)───(N) messages
 ```
 
+## Extensions V2 (`002_v2_features.sql`, Phase 1)
+
+### brands
+`id, name (unique), logo_url` — suggestion de marque à l'ajout d'un article (Phase 5). `products.brand_id` (nullable, FK) ajouté par la même migration. Pas de `product_variants` (taille/couleur) : non demandé explicitement, à réévaluer si un besoin concret apparaît.
+
+### product_images
+`id, product_id FK, url, position` — plusieurs photos par article, réordonnables (Phase 5).
+
+### likes
+`user_id, target_type(shop/service/product), target_id, created_at` — PK composite `(user_id, target_type, target_id)` : un like par user/cible, togglable (remplace un compteur simple).
+
+### shop_presence
+`id, shop_id FK, user_id FK, entered_at, left_at nullable` — session ouverte (`left_at IS NULL`) = présence active. Index partiel dédié pour compter les présences actives sans scanner l'historique (Phase 8).
+
+### reviews
+`id, author_id FK, target_type(shop/service/product), target_id, rating(1-5), comment, created_at` (Phase 3).
+
+### notifications
+`id, user_id FK, type, payload jsonb, read_at nullable, created_at` — centre de notifications in-app (Phase 7).
+
+### promotions
+`id, target_type(shop/service/product), target_id, owner_id FK, budget, status(pending/active/expired), starts_at, ends_at, impressions, clicks` — publicité sponsorisée (Phase 9).
+
+### Index géospatiaux
+`shops(latitude, longitude)` et `services(latitude, longitude)` — déjà utilisés pour le tri par proximité, jamais indexés jusqu'ici.
+
 ## Notes MVP → Vision long-terme
 
-Le schéma complet de la vision (payments, wallets, transactions, reviews, promotions, analytics_events, shop_visits, delivery_tracking, service_schedules) est **documenté ci-dessous** et partiellement présent en base (colonnes de statut prêtes), pour extension facile sans migration cassante :
-
-- `payments`, `wallets`, `transactions` → prévues pour la phase paiement en ligne
-- `reviews` → notation boutique/service/produit
-- `promotions` → codes promo
-- `analytics_events`, `shop_visits` → tracking visiteurs temps réel
-- `delivery_tracking` → position GPS livreur
-- `service_schedules` → calendrier de disponibilité du prestataire
-
-Voir les `TODO` en fin de `001_init.sql` pour les `CREATE TABLE` prêts à activer.
+Reste à venir (pas encore de migration) : `payments`, `wallets`, `transactions` (paiement en ligne), `delivery_tracking` (position GPS livreur), `service_schedules` (calendrier de disponibilité prestataire, Phase 6).

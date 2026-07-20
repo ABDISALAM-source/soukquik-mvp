@@ -15,13 +15,22 @@ import bookingsRoutes from './modules/bookings/bookings.routes';
 import chatRoutes from './modules/chat/chat.routes';
 import searchRoutes from './modules/search/search.routes';
 import adminRoutes from './modules/admin/admin.routes';
+import likesRoutes from './modules/likes/likes.routes';
+import reviewsRoutes from './modules/reviews/reviews.routes';
+import notificationsRoutes from './modules/notifications/notifications.routes';
+import promotionsRoutes from './modules/promotions/promotions.routes';
+import availabilityRoutes from './modules/availability/availability.routes';
+import analyticsRoutes from './modules/analytics/analytics.routes';
+import brandsRoutes from './modules/brands/brands.routes';
 
 export function createApp() {
   const app = express();
 
   app.use(helmet());
   app.use(cors({ origin: env.corsOrigin }));
-  app.use(express.json());
+  // Limite relevée à 6 Mo : la recherche par photo envoie une image
+  // (redimensionnée côté mobile) encodée en base64 dans le corps JSON.
+  app.use(express.json({ limit: '6mb' }));
 
   app.get('/api/health', (_req, res) => {
     res.json({ success: true, data: { status: 'ok' }, error: null });
@@ -30,7 +39,7 @@ export function createApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/users', usersRoutes);
   app.use('/api/categories', categoriesRoutes);
-  app.use('/api/shops', shopsRoutes); // inclut aussi /shops/:shopId/products et /shops/:shopId/orders
+  app.use('/api/shops', shopsRoutes); // inclut aussi /shops/:shopId/products, /orders et /presence
   app.use('/api/products', productsRoutes); // /products/:id
   app.use('/api/services', servicesRoutes); // inclut aussi /services/:serviceId/bookings
   app.use('/api/orders', ordersRoutes);
@@ -38,6 +47,13 @@ export function createApp() {
   app.use('/api/chats', chatRoutes);
   app.use('/api/search', searchRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/likes', likesRoutes);
+  app.use('/api/reviews', reviewsRoutes);
+  app.use('/api/notifications', notificationsRoutes);
+  app.use('/api/promotions', promotionsRoutes);
+  app.use('/api/availability', availabilityRoutes);
+  app.use('/api/track', analyticsRoutes);
+  app.use('/api/brands', brandsRoutes);
 
   app.use((_req, res) => {
     res.status(404).json({ success: false, data: null, error: 'Route introuvable' });

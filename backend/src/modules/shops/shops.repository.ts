@@ -1,4 +1,5 @@
 import { pool } from '../../config/db';
+import { haversineSql } from '../../common/geo';
 
 function mapShop(r: any) {
   return {
@@ -11,12 +12,20 @@ function mapShop(r: any) {
     longitude: r.longitude,
     address: r.address,
     logoUrl: r.logo_url,
+    patente: r.patente ?? null,
+    slogan: r.slogan ?? null,
+    idDocumentUrl: r.id_document_url ?? null,
     isActive: r.is_active,
+    isOpen: r.is_open ?? true,
     createdAt: r.created_at,
   };
 }
 
 export const shopsRepository = {
+  // Expose le mapping public (snake_case -> camelCase) pour les modules qui
+  // récupèrent des lignes shops via une requête ad hoc (ex: classements).
+  mapPublic: mapShop,
+
   async findAll(filters: { category?: string; q?: string }) {
     const conditions: string[] = ['is_active = true'];
     const params: any[] = [];
@@ -47,11 +56,27 @@ export const shopsRepository = {
     return rows[0] || null;
   },
 
+  async findNearby(lat: number, lng: number, radiusKm: number, limit: number) {
+    const distanceExpr = haversineSql('$1', '$2', 'latitude', 'longitude');
+    const { rows } = await pool.query(
+      `SELECT * FROM (
+         SELECT *, ${distanceExpr} AS distance_km
+         FROM shops
+         WHERE is_active = true AND latitude IS NOT NULL AND longitude IS NOT NULL
+       ) sub
+       WHERE distance_km <= $3
+       ORDER BY distance_km ASC
+       LIMIT $4`,
+      [lat, lng, radiusKm, limit]
+    );
+    return rows.map((r: any) => ({ ...mapShop(r), distanceKm: Number(r.distance_km) }));
+  },
+
   async create(ownerId: string, input: any) {
     const { rows } = await pool.query(
-      `INSERT INTO shops (owner_id, name, description, category_id, latitude, longitude, address, logo_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [ownerId, input.name, input.description ?? null, input.categoryId ?? null, input.latitude ?? null, input.longitude ?? null, input.address ?? null, input.logoUrl ?? null]
+      `INSERT INTO shops (owner_id, name, description, category_id, latitude, longitude, address, logo_url, patente, slogan, id_document_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      [ownerId, input.name, input.description ?? null, input.categoryId ?? null, input.latitude ?? null, input.longitude ?? null, input.address ?? null, input.logoUrl ?? null, input.patente ?? null, input.slogan ?? null, input.idDocumentUrl ?? null]
     );
     return mapShop(rows[0]);
   },
@@ -65,9 +90,10 @@ export const shopsRepository = {
         latitude = COALESCE($5, latitude),
         longitude = COALESCE($6, longitude),
         address = COALESCE($7, address),
-        logo_url = COALESCE($8, logo_url)
+        logo_url = COALESCE($8, logo_url),
+        is_open = COALESCE($9, is_open)
        WHERE id = $1 RETURNING *`,
-      [id, input.name ?? null, input.description ?? null, input.categoryId ?? null, input.latitude ?? null, input.longitude ?? null, input.address ?? null, input.logoUrl ?? null]
+      [id, input.name ?? null, input.description ?? null, input.categoryId ?? null, input.latitude ?? null, input.longitude ?? null, input.address ?? null, input.logoUrl ?? null, input.isOpen ?? null]
     );
     return mapShop(rows[0]);
   },
@@ -84,15 +110,24 @@ export const shopsRepository = {
     const { rows: orderRows } = await pool.query(
       `SELECT COUNT(*)::int AS total_orders,
               COALESCE(SUM(total_amount),0)::numeric AS revenue_total,
-              COUNT(*) FILTER (WHERE created_at::date = now()::date)::int AS orders_today
+              COUNT(*) FILTER (WHERE created_at::date = now()::date)::int AS orders_today,
+              COALESCE(SUM(total_amount) FILTER (WHERE created_at::date = now()::date AND status != 'cancelled'),0)::numeric AS revenue_today,
+              COALESCE(SUM(total_amount) FILTER (WHERE created_at::date = (now() - interval '1 day')::date AND status != 'cancelled'),0)::numeric AS revenue_yesterday
        FROM orders WHERE shop_id = $1`,
       [shopId]
     );
+    const revenueToday = Number(orderRows[0].revenue_today);
+    const revenueYesterday = Number(orderRows[0].revenue_yesterday);
+    // Tendance % vs hier : null si hier = 0 (pas de base de comparaison).
+    const revenueTrendPct = revenueYesterday > 0 ? Math.round(((revenueToday - revenueYesterday) / revenueYesterday) * 100) : null;
     return {
       totalProducts: productRows[0].total,
       activeProducts: productRows[0].active,
       totalOrders: orderRows[0].total_orders,
       revenueTotal: Number(orderRows[0].revenue_total),
+      revenueToday,
+      revenueYesterday,
+      revenueTrendPct,
       ordersToday: orderRows[0].orders_today,
     };
   },

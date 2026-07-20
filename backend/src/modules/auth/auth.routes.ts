@@ -7,6 +7,7 @@ const router = Router();
 
 router.post('/register', asyncHandler(authController.register));
 router.post('/login', asyncHandler(authController.login));
+router.post('/google', asyncHandler(authController.google));
 router.post('/refresh', asyncHandler(authController.refresh));
 router.get('/me', authGuard, asyncHandler(authController.me));
 

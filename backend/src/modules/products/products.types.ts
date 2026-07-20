@@ -4,9 +4,11 @@ export const createProductSchema = z.object({
   name: z.string().min(2),
   description: z.string().optional(),
   categoryId: z.string().uuid().optional(),
+  brandId: z.string().uuid().optional(),
   price: z.number().positive(),
   stock: z.number().int().min(0).default(0),
   imageUrl: z.string().url().optional(),
+  tags: z.array(z.string().min(1).max(40)).max(15).optional(),
 });
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 

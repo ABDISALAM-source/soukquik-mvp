@@ -12,6 +12,12 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api-soukquik.katatia.com/api"
       }
     },
     "production": {

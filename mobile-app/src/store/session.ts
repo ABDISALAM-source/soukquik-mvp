@@ -13,7 +13,9 @@ interface SessionState {
   user: SessionUser | null;
   accessToken: string | null;
   refreshToken: string | null;
-  setSession: (user: SessionUser, accessToken: string, refreshToken: string) => void;
+  justRegistered: boolean;
+  setSession: (user: SessionUser, accessToken: string, refreshToken: string, justRegistered?: boolean) => void;
+  consumeJustRegistered: () => void;
   clearSession: () => void;
 }
 
@@ -21,6 +23,9 @@ export const useSession = create<SessionState>((set) => ({
   user: null,
   accessToken: null,
   refreshToken: null,
-  setSession: (user, accessToken, refreshToken) => set({ user, accessToken, refreshToken }),
-  clearSession: () => set({ user: null, accessToken: null, refreshToken: null }),
+  justRegistered: false,
+  setSession: (user, accessToken, refreshToken, justRegistered = false) =>
+    set({ user, accessToken, refreshToken, justRegistered }),
+  consumeJustRegistered: () => set({ justRegistered: false }),
+  clearSession: () => set({ user: null, accessToken: null, refreshToken: null, justRegistered: false }),
 }));

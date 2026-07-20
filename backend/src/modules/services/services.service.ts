@@ -1,4 +1,5 @@
 import { Errors } from '../../common/errors';
+import { analyticsRepository } from '../analytics/analytics.repository';
 import { servicesRepository, mapService } from './services.repository';
 import { CreateServiceInput, UpdateServiceInput } from './services.types';
 
@@ -12,6 +13,15 @@ async function assertOwner(serviceId: string, providerId: string) {
 export const servicesService = {
   list(filters: { category?: string; q?: string; sort?: string }) {
     return servicesRepository.findAll(filters);
+  },
+
+  nearby(lat: number, lng: number, radiusKm: number, limit: number) {
+    return servicesRepository.findNearby(lat, lng, radiusKm, limit);
+  },
+
+  async trending(limit: number) {
+    const rows = await analyticsRepository.trendingServices(limit);
+    return rows.map((r: any) => ({ ...mapService(r), recentBookings: r.recent_bookings, recentVisits: r.recent_visits }));
   },
 
   async getById(id: string) {
@@ -32,5 +42,13 @@ export const servicesService = {
   async remove(id: string, providerId: string) {
     await assertOwner(id, providerId);
     await servicesRepository.softDelete(id);
+  },
+
+  async analyticsMine(providerId: string) {
+    const [base, visits] = await Promise.all([
+      servicesRepository.analyticsForProvider(providerId),
+      analyticsRepository.serviceVisitStats(providerId),
+    ]);
+    return { ...base, ...visits };
   },
 };

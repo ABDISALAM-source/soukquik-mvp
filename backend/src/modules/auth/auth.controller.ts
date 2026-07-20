@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ok } from '../../common/response';
 import { authService } from './auth.service';
-import { loginSchema, refreshSchema, registerSchema } from './auth.types';
+import { googleLoginSchema, loginSchema, refreshSchema, registerSchema } from './auth.types';
 
 export const authController = {
   async register(req: Request, res: Response) {
@@ -24,6 +24,12 @@ export const authController = {
 
   async me(req: Request, res: Response) {
     const result = await authService.me(req.user!.id);
+    return ok(res, result);
+  },
+
+  async google(req: Request, res: Response) {
+    const input = googleLoginSchema.parse(req.body);
+    const result = await authService.loginWithGoogle(input);
     return ok(res, result);
   },
 };

@@ -3,16 +3,60 @@
     "name": "SoukQuik",
     "slug": "soukquik",
     "version": "0.1.0",
+    "scheme": "soukquik",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#FAF7F2"
     },
-    "assetBundlePatterns": ["**/*"],
-    "ios": { "supportsTablet": true },
-    "android": {},
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.soukquik.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "SoukQuik utilise ta position pour te montrer les boutiques et prestataires les plus proches de toi.",
+        "NSCameraUsageDescription": "SoukQuik utilise l'appareil photo pour rechercher un article à partir d'une photo.",
+        "NSPhotoLibraryUsageDescription": "SoukQuik accède à tes photos pour rechercher un article à partir d'une image."
+      }
+    },
+    "android": {
+      "package": "com.soukquik.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF7F2"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
+      }
+    },
     "extra": {
-      "apiUrl": "http://localhost:4000/api"
-    }
+      "apiUrl": "http://localhost:4000/api",
+      "eas": {
+        "projectId": "843f757a-2729-4ba3-84fb-0d19f0395014"
+      }
+    },
+    "owner": "khayali",
+    "plugins": [
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "SoukQuik utilise ta position pour te montrer les boutiques et prestataires les plus proches de toi."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "SoukQuik utilise l'appareil photo pour tes photos de profil, logos et pièces justificatives.",
+          "photosPermission": "SoukQuik accède à tes photos pour ta photo de profil, ton logo et tes documents."
+        }
+      ],
+      "@react-native-google-signin/google-signin"
+    ]
   }
 }

@@ -1,6 +1,7 @@
 import { Errors } from '../../common/errors';
 import { pool } from '../../config/db';
 import { shopsRepository } from '../shops/shops.repository';
+import { notificationsService } from '../notifications/notifications.service';
 import { ordersRepository } from './orders.repository';
 import { CreateOrderInput } from './orders.types';
 
@@ -36,6 +37,13 @@ export const ordersService = {
     if (!order) throw Errors.notFound('Commande introuvable');
     const shop = await shopsRepository.findRawById(order.shop_id);
     if (!shop || shop.owner_id !== ownerId) throw Errors.forbidden("Vous n'êtes pas propriétaire de cette boutique");
-    return ordersRepository.updateStatus(orderId, status);
+    const updated = await ordersRepository.updateStatus(orderId, status);
+    await notificationsService.create(order.client_id, 'order_status_changed', {
+      orderId,
+      status,
+      shopId: shop.id,
+      shopName: shop.name,
+    });
+    return updated;
   },
 };
